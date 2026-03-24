@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evo XTTS V2</title>
+<style>
+  :root {
+    --bg: #070b11;
+    --panel: rgba(15, 23, 34, 0.88);
+    --panel-strong: rgba(9, 14, 22, 0.96);
+    --card: rgba(18, 28, 40, 0.92);
+    --field: #09111b;
+    --line: rgba(138, 160, 184, 0.16);
+    --line-strong: rgba(138, 160, 184, 0.32);
+    --text: #edf3ff;
+    --muted: #96a6bb;
+    --accent: #6ee7c8;
+    --accent-strong: #00b894;
+    --accent-warm: #ffb454;
+    --good: #57d38c;
+    --bad: #ff7676;
+    --shadow: 0 22px 80px rgba(0, 0, 0, 0.42);
+    --radius: 22px;
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: dark; }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI Variable Display", "Bahnschrift", "Trebuchet MS", sans-serif;
+    color: var(--text);
+    background:
+      radial-gradient(circle at top left, rgba(0, 184, 148, 0.18), transparent 26%),
+      radial-gradient(circle at right 18%, rgba(110, 231, 200, 0.12), transparent 24%),
+      radial-gradient(circle at bottom left, rgba(255, 180, 84, 0.12), transparent 22%),
+      linear-gradient(180deg, #06090f 0%, #0a1018 48%, #06080d 100%);
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.8), transparent 92%);
+  }
+
+  .shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 18px 18px 32px;
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+
+  .hero-card,
+  .panel {
+    position: relative;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
+  }
+
+  .hero-card::after,
+  .panel::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), transparent 36%);
+  }
+
+  .hero-card { padding: 30px; }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: rgba(110, 231, 200, 0.08);
+    border: 1px solid rgba(110, 231, 200, 0.18);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 18px rgba(110, 231, 200, 0.75);
+  }
+
+  h1 {
+    margin: 18px 0 12px;
+    max-width: none;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .hero p {
+    margin: 0;
+    max-width: 62ch;
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.68;
+  }
+
+  .hero-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .stat,
+  .card-list-item,
+  .preview {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+  }
+
+  .stat { padding: 15px 16px; }
+
+  .stat-label {
+    color: var(--muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .stat-value {
+    margin-top: 10px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+  }
+
+  .status-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px;
+    background: radial-gradient(circle at top right, rgba(110, 231, 200, 0.14), transparent 34%), var(--panel-strong);
+  }
+
+  .meta-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .status-head,
+  .panel-title,
+  .inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    width: fit-content;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: rgba(5, 10, 16, 0.65);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--muted);
+  }
+
+  .status-dot.ok { background: var(--good); box-shadow: 0 0 18px rgba(87, 211, 140, 0.7); }
+  .status-dot.loading { background: var(--accent-warm); box-shadow: 0 0 18px rgba(255, 180, 84, 0.6); }
+  .status-dot.error { background: var(--bad); box-shadow: 0 0 18px rgba(255, 118, 118, 0.65); }
+
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.22fr) minmax(340px, 0.78fr);
+    gap: 18px;
+  }
+
+  .panel { padding: 22px; }
+
+  .panel h2,
+  .panel h3 {
+    margin: 0 0 10px;
+    letter-spacing: -0.03em;
+  }
+
+  .panel-title p,
+  .muted,
+  .hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .grid,
+  .meta-list,
+  .voice-list,
+  .emotion-list,
+  .choice-row {
+    display: grid;
+    gap: 12px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #dbe7f6;
+  }
+
+  textarea,
+  select,
+  input[type="number"],
+  input[type="text"],
+  input[type="range"] {
+    width: 100%;
+    border: 1px solid var(--line);
+    background: var(--field);
+    color: var(--text);
+    border-radius: 16px;
+    padding: 13px 14px;
+    font: inherit;
+  }
+
+  textarea {
+    min-height: 240px;
+    resize: vertical;
+    line-height: 1.6;
+  }
+
+  textarea:focus,
+  select:focus,
+  input:focus,
+  button:focus,
+  .button-link:focus,
+  .chip:focus {
+    outline: 2px solid rgba(110, 231, 200, 0.28);
+    outline-offset: 0;
+    border-color: rgba(110, 231, 200, 0.4);
+  }
+
+  input[type="range"] {
+    padding: 0;
+    accent-color: var(--accent-strong);
+  }
+
+  .choice-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+  .chip {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: rgba(8, 13, 20, 0.72);
+    cursor: pointer;
+    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+
+  .chip:hover,
+  button:hover,
+  .button-link:hover { transform: translateY(-1px); }
+
+  .chip.active {
+    border-color: rgba(110, 231, 200, 0.4);
+    background: linear-gradient(180deg, rgba(110, 231, 200, 0.12), rgba(7, 12, 19, 0.88));
+  }
+
+  .chip strong,
+  .card-list-item strong {
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  .actions,
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .actions { margin-top: 18px; }
+
+  button,
+  .button-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: 999px;
+    padding: 12px 18px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.16s ease, opacity 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+  }
+
+  .primary { background: linear-gradient(135deg, #10b981, #0ea5a3); color: #04110f; }
+  .secondary { background: linear-gradient(135deg, #f59e0b, #f97316); color: #1d0c02; }
+  .ghost { background: rgba(9, 15, 23, 0.72); color: var(--text); border-color: var(--line); }
+
+  .preview,
+  .card-list-item { padding: 15px; }
+
+  audio {
+    width: 100%;
+    margin-top: 12px;
+    filter: saturate(0.9);
+  }
+
+  .response-box {
+    min-height: 82px;
+    margin-top: 14px;
+    padding: 14px;
+    border-radius: 18px;
+    border: 1px dashed var(--line-strong);
+    background: rgba(6, 11, 18, 0.72);
+    color: var(--muted);
+    white-space: pre-wrap;
+  }
+
+  .response-box.ok {
+    color: #baf7d2;
+    border-color: rgba(87, 211, 140, 0.34);
+    background: rgba(18, 68, 44, 0.22);
+  }
+
+  .response-box.error {
+    color: #ffd2d2;
+    border-color: rgba(255, 118, 118, 0.34);
+    background: rgba(92, 22, 22, 0.22);
+  }
+
+  .small { font-size: 12px; }
+  code { font-family: "Cascadia Code", "Consolas", monospace; color: #d7fff2; }
+
+  @media (max-width: 980px) {
+    .hero,
+    .layout,
+    .grid,
+    .choice-row,
+    .hero-grid { grid-template-columns: 1fr; }
+
+    .shell { padding: 16px 14px 28px; }
+    .hero-card,
+    .status-panel,
+    .panel { padding: 18px; }
+
+    .meta-list { grid-template-columns: 1fr; }
+
+    h1 {
+      max-width: none;
+      font-size: clamp(28px, 8vw, 36px);
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-card status-panel">
+        <div class="status-head">
+          <div>
+            <span class="eyebrow">Evo XTTS V2</span>
+            <h2 style="margin-top:14px;">Status da API</h2>
+          </div>
+          <div class="inline">
+            <div class="status-pill">
+              <span class="status-dot" id="statusDot"></span>
+              <span id="statusText">Carregando...</span>
+            </div>
+            <button class="ghost small" id="refreshMetaBtn">Atualizar</button>
+          </div>
+        </div>
+        <div class="hero-grid">
+          <div class="stat">
+            <div class="stat-label">Engine</div>
+            <div class="stat-value" id="engineStat">Evo XTTS V2</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Device</div>
+            <div class="stat-value" id="deviceStat">...</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Vozes</div>
+            <div class="stat-value" id="voicesStat">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Formato padrao</div>
+            <div class="stat-value">WAV</div>
+          </div>
+        </div>
+        <div class="meta-list" id="metaList">
+          <div class="card-list-item">
+            <strong>Inicializando</strong>
+            <span class="muted">Aguardando resposta da API local.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="layout">
+      <div class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Gerador</h2>
+            <p>Todos os parametros centrais em uma unica tela.</p>
+          </div>
+          <a class="button-link ghost small" href="/docs" target="_blank" rel="noreferrer">FastAPI Docs</a>
+        </div>
+
+        <div class="grid">
+          <div class="field full">
+            <div class="inline">
+              <label for="textInput">Texto</label>
+              <span class="hint"><span id="charCount">0</span> / 10000 caracteres</span>
+            </div>
+            <textarea id="textInput" placeholder="Digite o texto que sera sintetizado..."></textarea>
+          </div>
+
+          <div class="field">
+            <label for="voiceSelect">Voz</label>
+            <select id="voiceSelect">
+              <option value="">Carregando vozes...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="emotionSelect">Emocao</label>
+            <select id="emotionSelect">
+              <option value="">Neutro padrao</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="inline">
+              <label for="speedRange">Velocidade</label>
+              <strong id="speedValue">1.0</strong>
+            </div>
+            <input id="speedRange" type="range" min="0.5" max="2" step="0.05" value="1">
+          </div>
+
+          <div class="field">
+            <label for="formatSelect">Formato</label>
+            <select id="formatSelect">
+              <option value="wav" selected>WAV</option>
+              <option value="mp3">MP3</option>
+            </select>
+          </div>
+
+          <div class="field full">
+            <label>Modo de geracao</label>
+            <div class="choice-row">
+              <div class="chip active" data-mode="tts">
+                <strong>Completo</strong>
+                <span class="muted">Usa <code>POST /tts</code> com saida WAV ou MP3.</span>
+              </div>
+              <div class="chip" data-mode="stream">
+                <strong>Streaming</strong>
+                <span class="muted">Usa <code>POST /tts/stream</code> e retorna MP3.</span>
+              </div>
+              <div class="chip" data-mode="download">
+                <strong>Completo + download</strong>
+                <span class="muted">Gera, reproduz e dispara o download na sequencia.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="primary" id="generateBtn">Gerar audio</button>
+          <button class="secondary" id="downloadBtn" disabled>Baixar ultimo audio</button>
+          <button class="ghost" id="copyCurlBtn">Copiar curl</button>
+          <button class="ghost" id="loadSampleBtn">Texto de exemplo</button>
+          <button class="ghost" id="clearBtn">Limpar</button>
+        </div>
+
+        <div class="response-box" id="responseBox">Nenhuma geracao executada ainda.</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">
+          <div>
+            <h2>Preview</h2>
+            <p>Ultima resposta recebida pronta para escuta e inspecao.</p>
+          </div>
+        </div>
+
+        <div class="preview">
+          <div class="inline">
+            <strong id="previewTitle">Sem audio</strong>
+            <span class="muted" id="previewMeta">Aguardando geracao</span>
+          </div>
+          <audio id="audioPlayer" controls></audio>
+          <div class="toolbar">
+            <span class="muted small" id="blobInfo">Nenhum blob disponivel.</span>
+          </div>
+        </div>
+
+        <h3 style="margin-top:20px;">Vozes carregadas</h3>
+        <div class="voice-list" id="voiceList">
+          <div class="card-list-item">
+            <strong>Nenhuma voz carregada</strong>
+            <span class="muted">Aguardando leitura de <code>GET /voices</code>.</span>
+          </div>
+        </div>
+
+        <h3 style="margin-top:20px;">Emocoes</h3>
+        <div class="emotion-list" id="emotionList">
+          <div class="card-list-item">
+            <strong>Carregando</strong>
+            <span class="muted">Buscando <code>GET /emotions</code>.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const state = {
+    mode: "tts",
+    lastBlob: null,
+    lastFilename: "",
+    lastMime: "",
+    lastDurationMs: 0,
+    timerId: null,
+  };
+
+  const elements = {
+    textInput: document.getElementById("textInput"),
+    charCount: document.getElementById("charCount"),
+    voiceSelect: document.getElementById("voiceSelect"),
+    emotionSelect: document.getElementById("emotionSelect"),
+    speedRange: document.getElementById("speedRange"),
+    speedValue: document.getElementById("speedValue"),
+    formatSelect: document.getElementById("formatSelect"),
+    generateBtn: document.getElementById("generateBtn"),
+    downloadBtn: document.getElementById("downloadBtn"),
+    copyCurlBtn: document.getElementById("copyCurlBtn"),
+    loadSampleBtn: document.getElementById("loadSampleBtn"),
+    clearBtn: document.getElementById("clearBtn"),
+    responseBox: document.getElementById("responseBox"),
+    audioPlayer: document.getElementById("audioPlayer"),
+    previewTitle: document.getElementById("previewTitle"),
+    previewMeta: document.getElementById("previewMeta"),
+    blobInfo: document.getElementById("blobInfo"),
+    statusDot: document.getElementById("statusDot"),
+    statusText: document.getElementById("statusText"),
+    metaList: document.getElementById("metaList"),
+    voiceList: document.getElementById("voiceList"),
+    emotionList: document.getElementById("emotionList"),
+    engineStat: document.getElementById("engineStat"),
+    deviceStat: document.getElementById("deviceStat"),
+    voicesStat: document.getElementById("voicesStat"),
+    refreshMetaBtn: document.getElementById("refreshMetaBtn"),
+    modeChips: Array.from(document.querySelectorAll(".chip")),
+  };
+
+  function setResponse(message, kind = "") {
+    elements.responseBox.textContent = message;
+    elements.responseBox.className = "response-box" + (kind ? " " + kind : "");
+  }
+
+  function startGenerationTimer(startedAt, methodLabel) {
+    stopGenerationTimer();
+    const update = () => {
+      const elapsedSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
+      setResponse(`Enviando ${methodLabel}...\nTempo decorrido: ${elapsedSeconds}s`);
+    };
+    update();
+    state.timerId = window.setInterval(update, 100);
+  }
+
+  function stopGenerationTimer() {
+    if (state.timerId !== null) {
+      window.clearInterval(state.timerId);
+      state.timerId = null;
+    }
+  }
+
+  function updateCharCount() {
+    elements.charCount.textContent = String(elements.textInput.value.length);
+  }
+
+  function setMode(mode) {
+    state.mode = mode;
+    elements.modeChips.forEach((chip) => {
+      chip.classList.toggle("active", chip.dataset.mode === mode);
+    });
+
+    const isStream = mode === "stream";
+    elements.formatSelect.value = isStream ? "mp3" : elements.formatSelect.value;
+    elements.formatSelect.disabled = isStream;
+  }
+
+  function buildPayload() {
+    const payload = {
+      text: elements.textInput.value.trim(),
+      voice: elements.voiceSelect.value,
+      speed: Number(elements.speedRange.value),
+    };
+
+    if (state.mode !== "stream") {
+      payload.format = elements.formatSelect.value;
+    }
+
+    if (elements.emotionSelect.value) {
+      payload.emotion = elements.emotionSelect.value;
+    }
+
+    return payload;
+  }
+
+  function getRequestInfo() {
+    if (state.mode === "stream") {
+      return {
+        endpoint: "/tts/stream",
+        methodLabel: "POST /tts/stream",
+        format: "mp3",
+      };
+    }
+
+    return {
+      endpoint: "/tts",
+      methodLabel: "POST /tts",
+      format: elements.formatSelect.value,
+    };
+  }
+
+  function setBlob(blob, filename, mime) {
+    if (state.lastBlob) {
+      URL.revokeObjectURL(elements.audioPlayer.src);
+    }
+
+    state.lastBlob = blob;
+    state.lastFilename = filename;
+    state.lastMime = mime;
+    const objectUrl = URL.createObjectURL(blob);
+    elements.audioPlayer.src = objectUrl;
+    elements.downloadBtn.disabled = false;
+    elements.previewTitle.textContent = filename;
+    const durationLabel = state.lastDurationMs
+      ? `Gerado em ${(state.lastDurationMs / 1000).toFixed(2)}s`
+      : "Geracao concluida";
+    elements.previewMeta.textContent = `${mime} | ${durationLabel}`;
+    elements.blobInfo.textContent = `${blob.size.toLocaleString("pt-BR")} bytes`;
+  }
+
+  async function refreshMeta() {
+    try {
+      const [healthRes, voicesRes, emotionsRes] = await Promise.all([
+        fetch("/health"),
+        fetch("/voices"),
+        fetch("/emotions"),
+      ]);
+
+      const health = await healthRes.json();
+      const voices = voicesRes.ok ? await voicesRes.json() : [];
+      const emotions = emotionsRes.ok ? await emotionsRes.json() : [];
+
+      elements.engineStat.textContent = health.engine || "Evo XTTS V2";
+      elements.deviceStat.textContent = health.device || "-";
+      elements.voicesStat.textContent = String(health.voices_loaded ?? voices.length);
+
+      const status = health.status || "loading";
+      elements.statusDot.className = `status-dot ${status === "ok" ? "ok" : "loading"}`;
+      elements.statusText.textContent = status === "ok" ? "API pronta" : "API carregando";
+
+      elements.metaList.innerHTML = `
+        <div class="card-list-item">
+          <strong>Modelo carregado</strong>
+          <span class="muted">${health.model_loaded ? "Sim" : "Nao"}</span>
+        </div>
+        <div class="card-list-item">
+          <strong>Endpoint principal</strong>
+          <span class="muted">http://localhost:8881/tts</span>
+        </div>
+        <div class="card-list-item">
+          <strong>Streaming</strong>
+          <span class="muted">MP3 progressivo via /tts/stream</span>
+        </div>
+      `;
+
+      elements.voiceSelect.innerHTML = voices.length
+        ? voices.map((voice) => `<option value="${voice.id}">${voice.name} (${voice.id})</option>`).join("")
+        : `<option value="">Nenhuma voz encontrada</option>`;
+
+      elements.voiceList.innerHTML = voices.length
+        ? voices.map((voice) => `
+            <div class="card-list-item">
+              <strong>${voice.name}</strong>
+              <span class="muted">ID: ${voice.id}</span><br>
+              <span class="muted">${voice.description}</span>
+            </div>
+          `).join("")
+        : `
+          <div class="card-list-item">
+            <strong>Nenhuma voz encontrada</strong>
+            <span class="muted">Adicione arquivos .wav na pasta voices.</span>
+          </div>
+        `;
+
+      elements.emotionSelect.innerHTML = `<option value="">Neutro padrao</option>` + emotions.map((emotion) => (
+        `<option value="${emotion.id}">${emotion.id} (${emotion.speed_modifier}x)</option>`
+      )).join("");
+
+      elements.emotionList.innerHTML = emotions.map((emotion) => `
+        <div class="card-list-item">
+          <strong>${emotion.id}</strong>
+          <span class="muted">${emotion.description}</span><br>
+          <span class="muted">temperature ${emotion.temperature} | speed mod ${emotion.speed_modifier}x</span>
+        </div>
+      `).join("");
+    } catch (error) {
+      elements.statusDot.className = "status-dot error";
+      elements.statusText.textContent = "Falha ao ler a API";
+      elements.metaList.innerHTML = `
+        <div class="card-list-item">
+          <strong>Erro</strong>
+          <span class="muted">${error.message}</span>
+        </div>
+      `;
+    }
+  }
+
+  async function generateAudio() {
+    const payload = buildPayload();
+    if (!payload.text) {
+      setResponse("Digite um texto antes de gerar o audio.", "error");
+      return;
+    }
+
+    const info = getRequestInfo();
+    const buttonLabel = elements.generateBtn.textContent;
+    elements.generateBtn.disabled = true;
+    elements.generateBtn.textContent = "Gerando...";
+    const startedAt = performance.now();
+    startGenerationTimer(startedAt, info.methodLabel);
+
+    try {
+      const response = await fetch(info.endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      state.lastDurationMs = performance.now() - startedAt;
+      const filename = `tts_${Date.now()}.${info.format}`;
+      const mime = response.headers.get("content-type") || (info.format === "wav" ? "audio/wav" : "audio/mpeg");
+      setBlob(blob, filename, mime);
+      setResponse(
+        `${info.methodLabel} concluido com sucesso.\n` +
+        `Voz: ${payload.voice || "(padrao)"}\n` +
+        `Emocao: ${payload.emotion || "neutro"}\n` +
+        `Speed: ${payload.speed}\n` +
+        `Tempo: ${(state.lastDurationMs / 1000).toFixed(2)}s\n` +
+        `Formato: ${info.format.toUpperCase()}`,
+        "ok"
+      );
+
+      if (state.mode === "download") {
+        downloadLastAudio();
+      }
+    } catch (error) {
+      setResponse(`Falha na geracao.\n${error.message}`, "error");
+    } finally {
+      stopGenerationTimer();
+      elements.generateBtn.disabled = false;
+      elements.generateBtn.textContent = buttonLabel;
+    }
+  }
+
+  function downloadLastAudio() {
+    if (!state.lastBlob) {
+      return;
+    }
+
+    const url = URL.createObjectURL(state.lastBlob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = state.lastFilename || "tts_output.wav";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  async function copyCurl() {
+    const payload = buildPayload();
+    const info = getRequestInfo();
+    const curl = [
+      `curl -X POST http://localhost:8881${info.endpoint} ^`,
+      `  -H "Content-Type: application/json" ^`,
+      `  -d '${JSON.stringify(payload)}' ^`,
+      `  --output saida.${info.format}`,
+    ].join("\n");
+
+    try {
+      await navigator.clipboard.writeText(curl);
+      setResponse(`Comando curl copiado:\n${curl}`, "ok");
+    } catch (error) {
+      setResponse(`Nao foi possivel copiar automaticamente.\n\n${curl}`, "error");
+    }
+  }
+
+  function loadSample() {
+    elements.textInput.value =
+      "Ola. Esta interface permite gerar narracao em portugues do Brasil com voz clonada, emocao configuravel e saida final em WAV para preservar a qualidade.";
+    updateCharCount();
+    setResponse("Texto de exemplo carregado.");
+  }
+
+  function clearForm() {
+    elements.textInput.value = "";
+    elements.speedRange.value = "1";
+    elements.speedValue.textContent = "1.0";
+    elements.emotionSelect.value = "";
+    state.lastDurationMs = 0;
+    setMode("tts");
+    updateCharCount();
+    setResponse("Formulario limpo.");
+  }
+
+  elements.textInput.addEventListener("input", updateCharCount);
+  elements.speedRange.addEventListener("input", () => {
+    elements.speedValue.textContent = Number(elements.speedRange.value).toFixed(2);
+  });
+  elements.modeChips.forEach((chip) => chip.addEventListener("click", () => setMode(chip.dataset.mode)));
+  elements.generateBtn.addEventListener("click", generateAudio);
+  elements.downloadBtn.addEventListener("click", downloadLastAudio);
+  elements.copyCurlBtn.addEventListener("click", copyCurl);
+  elements.loadSampleBtn.addEventListener("click", loadSample);
+  elements.clearBtn.addEventListener("click", clearForm);
+  elements.refreshMetaBtn.addEventListener("click", refreshMeta);
+
+  updateCharCount();
+  refreshMeta();
+</script>
+</body>
+</html>

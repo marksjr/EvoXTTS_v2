@@ -1,0 +1,14 @@
+venv/
+dist/
+runtime/
+.tts/
+.agent/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+logs_test.txt
+normal.mp3
+examples/*.mp3
+examples/*.wav
+voices/*.wav
