@@ -6,6 +6,8 @@ Local XTTS voice cloning with a browser interface, FastAPI backend, multilingual
 
 ![Generator and preview](docs/images/dashboard-generator.png)
 
+![Full interface](docs/images/dashboard-full.png)
+
 ## Overview
 
 Evo XTTS V2 is designed to run locally on Windows with a simple workflow:
@@ -369,7 +371,7 @@ with requests.post(f"{base_url}/tts/stream", json=payload, stream=True, timeout=
 
 ## PHP Example
 
-A more complete PHP client is available in [examples/example_client.php](examples/example_client.php).
+A complete PHP API example is available in [examples/api.php](examples/api.php).
 
 Minimal example:
 
