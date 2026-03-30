@@ -1,10 +1,12 @@
 import logging
 from pathlib import Path
+from contextlib import nullcontext
 
 import numpy as np
 
 from app.core.config import (
     CUDNN_BENCHMARK,
+    DEFAULT_LANGUAGE,
     DEFAULT_VOICE,
     DEVICE,
     EMOTIONS,
@@ -16,25 +18,31 @@ from app.core.config import (
     TEMPERATURE,
     TOP_K,
     TOP_P,
+    SUPPORTED_LANGUAGES,
     TTS_HOME_DIR,
+    USE_FLOAT16,
+    USE_TF32,
+    USE_TORCH_COMPILE,
     VOICES_DIR,
-    XTTS_LANG_CODE,
     XTTS_MODEL_NAME,
 )
 from app.utils.audio import crossfade_chunks, post_process, trim_silence
-from app.utils.text import chunk_text, preprocess_text_ptbr
+from app.utils.text import chunk_text, preprocess_text
 
 logger = logging.getLogger(__name__)
 
 
 class XTTSEngine:
-    """Engine Coqui Evo XTTS V2 para pt-BR com clonagem de voz."""
+    """Coqui Evo XTTS V2 engine with multi-language voice cloning."""
 
     def __init__(self):
         self._model = None
         self._loaded = False
         self._voices_dir = Path(VOICES_DIR)
         self._voice_cache: dict[str, tuple] = {}
+        self._available_voices: set[str] = set()
+        self._autocast_dtype = None
+        self._preloading = False
 
     def load(self) -> None:
         if self._loaded:
@@ -65,7 +73,12 @@ class XTTSEngine:
             if CUDNN_BENCHMARK:
                 torch.backends.cudnn.benchmark = True
                 torch.backends.cudnn.enabled = True
+            if USE_TF32:
+                torch.backends.cuda.matmul.allow_tf32 = True
+                torch.backends.cudnn.allow_tf32 = True
             torch.set_grad_enabled(False)
+            if USE_FLOAT16:
+                self._autocast_dtype = torch.float16
 
         logger.info(f"[Evo XTTS V2] Carregando modelo (device={DEVICE})")
 
@@ -82,11 +95,17 @@ class XTTSEngine:
 
         if DEVICE == "cuda":
             self._model.cuda()
+            if USE_TORCH_COMPILE and hasattr(torch, "compile"):
+                try:
+                    self._model.gpt = torch.compile(self._model.gpt, mode="reduce-overhead", fullgraph=False)
+                    logger.info("[Evo XTTS V2] torch.compile ativado para GPT")
+                except Exception as exc:
+                    logger.warning(f"[Evo XTTS V2] torch.compile unavailable: {exc}")
 
         self._loaded = True
-        logger.info("[Evo XTTS V2] Modelo carregado com sucesso")
+        logger.info("[Evo XTTS V2] Model loaded successfully")
 
-        self._preload_voices()
+        self._scan_available_voices()
 
     def _install_audio_fallbacks(self) -> None:
         import soundfile as sf
@@ -128,31 +147,51 @@ class XTTSEngine:
             except (ImportError, ModuleNotFoundError) as exc:
                 if "torchcodec" not in str(exc).lower():
                     raise
-                logger.warning("[Evo XTTS V2] TorchCodec indisponivel; usando fallback com soundfile")
+                if not getattr(torchaudio, "_evo_soundfile_warning_logged", False):
+                    logger.warning("[Evo XTTS V2] TorchCodec unavailable; using soundfile fallback")
+                    torchaudio._evo_soundfile_warning_logged = True
                 return load_with_soundfile(*args, **kwargs)
 
         torchaudio.load = patched_load
         torchaudio._evo_soundfile_patch = True
 
-    def _preload_voices(self) -> None:
-        logger.info(f"[Evo XTTS V2] Procurando vozes em: {self._voices_dir}")
+    def _scan_available_voices(self) -> None:
+        logger.info(f"[Evo XTTS V2] Scanning voices in: {self._voices_dir}")
         if not self._voices_dir.exists():
-            logger.warning(f"[Evo XTTS V2] Pasta '{self._voices_dir}' nao encontrada.")
+            logger.warning(f"[Evo XTTS V2] Folder '{self._voices_dir}' not found.")
             return
 
         wav_files = list(self._voices_dir.glob("*.wav"))
         if not wav_files:
-            logger.warning(f"[Evo XTTS V2] Nenhum .wav em '{self._voices_dir}/'.")
+            logger.warning(f"[Evo XTTS V2] No .wav files in '{self._voices_dir}/'.")
             return
 
         for wav_file in wav_files:
-            voice_id = wav_file.stem
+            self._available_voices.add(wav_file.stem)
+        logger.info(f"[Evo XTTS V2] {len(self._available_voices)} voice(s) found")
+
+    def preload_voices_background(self) -> None:
+        import threading
+        threading.Thread(target=self._preload_voices_sync, daemon=True).start()
+
+    def _preload_voices_sync(self) -> None:
+        self._preloading = True
+        total = len(self._available_voices)
+        cached = 0
+        for voice_id in sorted(self._available_voices):
+            if voice_id in self._voice_cache:
+                cached += 1
+                continue
+            wav_path = self._voices_dir / f"{voice_id}.wav"
             try:
-                self._cache_voice(voice_id, str(wav_file))
-                logger.info(f"[Evo XTTS V2] Voz '{voice_id}' cacheada")
+                self._cache_voice(voice_id, str(wav_path))
+                cached += 1
+                logger.info(f"[Evo XTTS V2] Voice '{voice_id}' cached ({cached}/{total})")
             except Exception as exc:
                 import traceback
-                logger.error(f"[Evo XTTS V2] Erro ao carregar voz '{voice_id}': {exc}\n{traceback.format_exc()}")
+                logger.error(f"[Evo XTTS V2] Error loading voice '{voice_id}': {exc}\n{traceback.format_exc()}")
+        self._preloading = False
+        logger.info(f"[Evo XTTS V2] Preload complete: {cached}/{total} voices")
 
     def _cache_voice(self, voice_id: str, wav_path: str) -> None:
         gpt_cond_latent, speaker_embedding = self._model.get_conditioning_latents(
@@ -173,9 +212,9 @@ class XTTSEngine:
             else:
                 available = list(self._voice_cache.keys())
                 raise ValueError(
-                    f"Voz '{voice}' nao encontrada. "
-                    f"Coloque '{voice}.wav' (6-30s) na pasta '{self._voices_dir}/'. "
-                    f"Disponiveis: {available}"
+                    f"Voice '{voice}' not found. "
+                    f"Place '{voice}.wav' (6-30s) in '{self._voices_dir}/'. "
+                    f"Available: {available}"
                 )
         return self._voice_cache[voice]
 
@@ -183,31 +222,69 @@ class XTTSEngine:
     def is_loaded(self) -> bool:
         return self._loaded
 
+    def get_supported_languages(self) -> list[dict]:
+        return [{"id": lang_id, "name": data["label"]} for lang_id, data in SUPPORTED_LANGUAGES.items()]
+
+    def validate_language(self, language: str) -> bool:
+        return language in SUPPORTED_LANGUAGES
+
+    def _normalize_language(self, language: str | None) -> str:
+        normalized = (language or DEFAULT_LANGUAGE).strip().lower()
+        if normalized not in SUPPORTED_LANGUAGES:
+            available = ", ".join(SUPPORTED_LANGUAGES.keys())
+            raise ValueError(f"Language '{language}' not supported. Available: {available}")
+        return normalized
+
+    _VOICE_PREFIX_TO_LANG = {
+        "Arabic": "ar",
+        "Danish": "da",
+        "Dutch": "nl",
+        "English": "en",
+        "French": "fr",
+        "German": "de",
+        "Japanese": "ja",
+        "Norwegian": "no",
+        "Portuguese_Brazilian": "pt",
+        "Portuguese": "pt",
+        "Spanish": "es",
+        "Swedish": "sv",
+    }
+    _VOICE_PREFIX_SORTED = sorted(_VOICE_PREFIX_TO_LANG.items(), key=lambda x: -len(x[0]))
+
+    def _detect_voice_language(self, voice_id: str) -> str:
+        for prefix, lang_code in self._VOICE_PREFIX_SORTED:
+            if voice_id.startswith(prefix):
+                return lang_code
+        return DEFAULT_LANGUAGE
+
     def get_voices(self) -> list[dict]:
+        all_voices = self._available_voices | set(self._voice_cache.keys())
         voices = []
-        for voice_id in self._voice_cache:
+        for voice_id in sorted(all_voices):
+            cached = voice_id in self._voice_cache
+            lang = self._detect_voice_language(voice_id)
             voices.append(
                 {
                     "id": voice_id,
                     "name": voice_id.replace("_", " ").replace("-", " ").title(),
                     "gender": "clonada",
-                    "lang": "pt-br",
-                    "description": f"Voz clonada '{voice_id}' (Evo XTTS V2)",
+                    "lang": lang,
+                    "description": f"Cloned voice '{voice_id}'" + ("" if cached else " (loading...)"),
+                    "languages": list(SUPPORTED_LANGUAGES.keys()),
                 }
             )
         return voices
 
     def get_default_voice(self) -> str:
-        if self._voice_cache:
-            if DEFAULT_VOICE in self._voice_cache:
-                return DEFAULT_VOICE
-            return next(iter(self._voice_cache))
+        all_voices = self._available_voices | set(self._voice_cache.keys())
+        if DEFAULT_VOICE in all_voices:
+            return DEFAULT_VOICE
+        if all_voices:
+            return sorted(all_voices)[0]
         return DEFAULT_VOICE
 
     def validate_voice(self, voice: str) -> bool:
-        if voice in self._voice_cache:
-            return True
-        return (self._voices_dir / f"{voice}.wav").exists()
+        return voice in self._voice_cache or voice in self._available_voices or (self._voices_dir / f"{voice}.wav").exists()
 
     def _get_emotion_params(self, emotion: str | None) -> dict:
         if emotion and emotion in EMOTIONS:
@@ -225,16 +302,24 @@ class XTTSEngine:
             "repetition_penalty": REPETITION_PENALTY,
         }
 
-    def _synth_chunk(self, text_chunk: str, voice: str, speed: float, emotion: str | None = None) -> np.ndarray:
+    def _autocast_context(self):
+        import torch
+
+        if DEVICE != "cuda" or self._autocast_dtype is None:
+            return nullcontext()
+        return torch.autocast(device_type="cuda", dtype=self._autocast_dtype)
+
+    def _synth_chunk(self, text_chunk: str, voice: str, language: str, speed: float, emotion: str | None = None) -> np.ndarray:
         import torch
 
         gpt_cond_latent, speaker_embedding = self._get_voice(voice)
         emotion_params = self._get_emotion_params(emotion)
+        lang_code = SUPPORTED_LANGUAGES[self._normalize_language(language)]["tts_code"]
 
-        with torch.inference_mode():
+        with torch.inference_mode(), self._autocast_context():
             out = self._model.inference(
                 text_chunk,
-                XTTS_LANG_CODE,
+                lang_code,
                 gpt_cond_latent,
                 speaker_embedding,
                 temperature=emotion_params["temperature"],
@@ -247,58 +332,68 @@ class XTTSEngine:
             )
         return out["wav"]
 
-    def synthesize(self, text: str, voice: str, speed: float, emotion: str | None = None) -> np.ndarray:
-        text = preprocess_text_ptbr(text)
+    def synthesize(self, text: str, voice: str, language: str, speed: float, emotion: str | None = None) -> np.ndarray:
+        language = self._normalize_language(language)
+        text = preprocess_text(text, language)
         chunks = chunk_text(text)
         logger.debug(f"[Evo XTTS V2] {len(chunks)} chunks, emotion={emotion or 'neutro'}")
 
         audio_segments = []
         for chunk in chunks:
-            audio = self._synth_chunk(chunk, voice, speed, emotion)
+            audio = self._synth_chunk(chunk, voice, language, speed, emotion)
             if audio is not None and len(audio) > 0:
                 audio_segments.append(audio)
 
         if not audio_segments:
-            raise RuntimeError("Nenhum audio gerado")
+            raise RuntimeError("No audio generated")
 
         audio = crossfade_chunks(audio_segments)
         audio = trim_silence(audio)
         audio = post_process(audio)
         return audio
 
-    def synthesize_chunks(self, text: str, voice: str, speed: float, emotion: str | None = None) -> list[np.ndarray]:
-        text = preprocess_text_ptbr(text)
+    def synthesize_chunks(self, text: str, voice: str, language: str, speed: float, emotion: str | None = None) -> list[np.ndarray]:
+        language = self._normalize_language(language)
+        text = preprocess_text(text, language)
         chunks = chunk_text(text)
         result = []
 
         for chunk in chunks:
-            audio = self._synth_chunk(chunk, voice, speed, emotion)
+            audio = self._synth_chunk(chunk, voice, language, speed, emotion)
             if audio is not None and len(audio) > 0:
                 result.append(post_process(audio))
 
         return result
 
-    def synthesize_stream(self, text: str, voice: str, speed: float, emotion: str | None = None):
+    def synthesize_stream(self, text: str, voice: str, language: str, speed: float, emotion: str | None = None):
         import torch
 
-        text = preprocess_text_ptbr(text)
+        language = self._normalize_language(language)
+        original_text = text
+        text = preprocess_text(text, language)
         gpt_cond_latent, speaker_embedding = self._get_voice(voice)
         emotion_params = self._get_emotion_params(emotion)
+        lang_code = SUPPORTED_LANGUAGES[language]["tts_code"]
 
-        with torch.inference_mode():
-            chunks_iter = self._model.inference_stream(
-                text,
-                XTTS_LANG_CODE,
-                gpt_cond_latent,
-                speaker_embedding,
-                stream_chunk_size=STREAM_CHUNK_SIZE,
-                temperature=emotion_params["temperature"],
-                top_k=TOP_K,
-                top_p=emotion_params["top_p"],
-                repetition_penalty=emotion_params["repetition_penalty"],
-                length_penalty=LENGTH_PENALTY,
-                speed=speed * emotion_params["speed_mod"],
-                enable_text_splitting=True,
-            )
-            for chunk_tensor in chunks_iter:
-                yield chunk_tensor.cpu().float().numpy()
+        try:
+            with torch.inference_mode(), self._autocast_context():
+                chunks_iter = self._model.inference_stream(
+                    text,
+                    lang_code,
+                    gpt_cond_latent,
+                    speaker_embedding,
+                    stream_chunk_size=STREAM_CHUNK_SIZE,
+                    temperature=emotion_params["temperature"],
+                    top_k=TOP_K,
+                    top_p=emotion_params["top_p"],
+                    repetition_penalty=emotion_params["repetition_penalty"],
+                    length_penalty=LENGTH_PENALTY,
+                    speed=speed * emotion_params["speed_mod"],
+                    enable_text_splitting=True,
+                )
+                for chunk_tensor in chunks_iter:
+                    yield chunk_tensor.cpu().float().numpy()
+        except AttributeError as exc:
+            logger.warning(f"[Evo XTTS V2] Native streaming unavailable; using chunk fallback: {exc}")
+            for chunk in self.synthesize_chunks(original_text, voice, language, speed, emotion):
+                yield chunk

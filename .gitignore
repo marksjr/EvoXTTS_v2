@@ -3,11 +3,15 @@ dist/
 runtime/
 .tts/
 .agent/
+.claude/
 __pycache__/
 **/__pycache__/
 *.pyc
 *.pyo
 logs_test.txt
+server.log
 normal.mp3
 examples/*.mp3
 examples/*.wav
+
+voices/*.wav

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evo XTTS V2 - Quick Guide</title>
+<style>
+  :root {
+    --bg: #0b1018;
+    --panel: #141c28;
+    --card: #1a2432;
+    --line: rgba(160, 180, 210, 0.18);
+    --text: #eef4ff;
+    --muted: #97a8bf;
+    --accent: #6ee7c8;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, #081019 0%, #0d1420 100%);
+  }
+  .page {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+  }
+  .hero, .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+  .hero {
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .card {
+    padding: 20px;
+  }
+  .eyebrow {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    color: var(--accent);
+    border: 1px solid rgba(110, 231, 200, 0.2);
+    background: rgba(110, 231, 200, 0.08);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  h1 { margin: 14px 0 10px; font-size: clamp(34px, 5vw, 54px); line-height: 0.95; }
+  h2 { margin: 0 0 12px; font-size: 28px; }
+  h3 { margin: 0 0 8px; font-size: 19px; }
+  p, li, span { color: var(--muted); line-height: 1.7; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .steps { display: grid; gap: 12px; }
+  .step {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--card);
+  }
+  .num {
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #07110e;
+    background: var(--accent);
+    font-weight: 700;
+  }
+  code {
+    padding: 2px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #0d1622;
+    color: var(--text);
+  }
+  .callout {
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: var(--card);
+  }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  .btn {
+    display: inline-block;
+    padding: 12px 18px;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    color: var(--text);
+    background: #101826;
+  }
+  .btn.primary {
+    background: var(--accent);
+    color: #07110e;
+    border-color: transparent;
+    font-weight: 700;
+  }
+  ul { margin: 12px 0 0 18px; }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <span class="eyebrow">Quick Guide</span>
+      <h1>Evo XTTS V2</h1>
+      <p>Simple instructions to install, launch, and use the local Windows interface and API.</p>
+      <div class="actions">
+        <a class="btn primary" href="http://localhost:8881/">Open Interface</a>
+        <a class="btn" href="http://localhost:8881/docs">Open API Docs</a>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Quick Start</h2>
+        <div class="steps">
+          <div class="step"><div class="num">1</div><div><h3>Install</h3><p>Run <code>install.bat</code> to prepare the environment and dependencies.</p></div></div>
+          <div class="step"><div class="num">2</div><div><h3>Add A Voice</h3><p>Place at least one <code>.wav</code> file inside the <code>voices</code> folder.</p></div></div>
+          <div class="step"><div class="num">3</div><div><h3>Launch</h3><p>Run <code>start.bat</code> and wait for the browser to open.</p></div></div>
+          <div class="step"><div class="num">4</div><div><h3>Generate Audio</h3><p>Enter text, choose language, voice, emotion, and format, then generate full audio or streaming audio.</p></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Recommended Voice Samples</h2>
+        <ul>
+          <li>Use <code>.wav</code> files</li>
+          <li>Prefer 6 to 30 seconds</li>
+          <li>One speaker only</li>
+          <li>No background music</li>
+          <li>Clean and consistent recording volume</li>
+          <li>WAV is the recommended output format</li>
+        </ul>
+        <div class="callout">
+          <strong>MP3 is optional</strong>
+          <p>If you want MP3 output, install <code>ffmpeg</code>.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Important Files</h2>
+        <ul>
+          <li><code>install.bat</code>: source install entry point</li>
+          <li><code>start.bat</code>: source launch entry point</li>
+          <li><code>ui/index.html</code>: web interface</li>
+          <li><code>voices/</code>: cloned voice samples</li>
+          <li><code>README.md</code>: full project documentation</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>If Something Goes Wrong</h2>
+        <ul>
+          <li>Confirm there is at least one <code>.wav</code> file inside <code>voices</code></li>
+          <li>Run <code>install.bat</code> again if dependencies are missing</li>
+          <li>Use <code>Ctrl+F5</code> if the interface looks stale</li>
+          <li>If the browser does not open, visit <code>http://localhost:8881/</code> manually</li>
+          <li>Check <code>http://localhost:8881/health</code> to confirm the API is ready</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

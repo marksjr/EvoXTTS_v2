@@ -1,191 +1,498 @@
-# Evo XTTS V2 para Windows
+# Evo XTTS V2 for Windows
 
-Interface local de Text-to-Speech em portugues do Brasil com clonagem de voz, painel web, API FastAPI e suporte a GPU NVIDIA no Windows.
+Local XTTS voice cloning with a browser interface, FastAPI backend, multilingual TTS support, and optional NVIDIA GPU acceleration on Windows.
 
-![Status e dashboard](docs/images/dashboard-status.png)
+![Status and dashboard](docs/images/dashboard-status.png)
 
-![Gerador e preview](docs/images/dashboard-generator.png)
+![Generator and preview](docs/images/dashboard-generator.png)
 
-## O que e o projeto
+## Overview
 
-Evo XTTS V2 foi preparado para rodar localmente no Windows com foco em uso simples:
+Evo XTTS V2 is designed to run locally on Windows with a simple workflow:
 
-- interface web pronta para usuario comum
-- API local em `http://localhost:8881`
-- suporte a clonagem de voz via arquivos `.wav`
-- uso de CUDA quando houver GPU NVIDIA compativel
-- fallback para CPU quando necessario
-- empacotamento portable para distribuicao em GitHub Releases
+- local web interface at `http://localhost:8881/`
+- local FastAPI server at `http://localhost:8881`
+- voice cloning from `.wav` reference files
+- multilingual input text support
+- full audio generation through `/tts`
+- progressive audio generation through `/tts/stream`
+- CUDA support when a compatible NVIDIA GPU is available
+- CPU fallback when needed
 
-## Para quem este projeto foi feito
+## Who This Project Is For
 
-- usuarios que querem gerar audio localmente sem depender de servico externo
-- quem precisa de uma interface simples no navegador
-- quem quer usar a API local em PHP, scripts ou automacoes
-- quem pretende publicar uma versao portable para usuario leigo no Windows
+- users who want local speech generation without external services
+- people who want a simple browser UI
+- developers who want to use the local API from PHP, Python, curl, or automation tools
+- maintainers who want to publish a portable Windows release
 
-## Requisitos
+## Requirements
 
-### Para usar pelo codigo-fonte
+### Source Usage
 
-- Windows 10 ou Windows 11
+- Windows 10 or Windows 11
 - Python 3.11
-- GPU NVIDIA recomendada, mas nao obrigatoria
-- conexao com internet na primeira instalacao para baixar dependencias e o modelo
+- NVIDIA GPU recommended, but not required
+- internet access on first install to download dependencies and the model
 
-### Para MP3
+### MP3 Support
 
-`ffmpeg` e opcional. Sem ele, o projeto continua funcionando normalmente com `WAV`.
+`ffmpeg` is optional. Without it, the project still works with `WAV` output.
 
-Instalacao sugerida:
+Suggested install:
 
 ```powershell
 winget install ffmpeg
 ```
 
-## Instalacao rapida pelo codigo-fonte
+## Quick Source Setup
 
-1. Baixe ou clone o projeto.
-2. Abra a pasta do projeto.
-3. Clique em `Instalar XTTS.bat`.
-4. Aguarde a instalacao do ambiente e o download do modelo.
-5. Coloque ao menos um arquivo `.wav` dentro da pasta `voices`.
-6. Clique em `Abrir XTTS.bat`.
-7. Aguarde a interface abrir no navegador.
+1. Download or clone the project.
+2. Open the project folder.
+3. Run `install.bat`.
+4. Wait for the environment setup and model download to finish.
+5. Place at least one `.wav` file inside `voices/`.
+6. Run `start.bat`.
+7. Wait for the interface to open in the browser.
 
-## Instalacao ideal para usuario comum
+## Using The Web Interface
 
-Para usuario leigo, o recomendado nao e distribuir o codigo-fonte.
-O recomendado e publicar uma **Release portable** no GitHub.
+1. Open `http://localhost:8881/`.
+2. Enter the text.
+3. Choose the language.
+4. Choose the voice.
+5. Adjust emotion, speed, and format.
+6. Click `Generate Audio` for full output or `Generate Streaming` for streaming output.
+7. Listen in the preview player and download the result if needed.
 
-Fluxo ideal do usuario final:
+## Voices
 
-1. Baixar o `.zip` da Release
-2. Extrair a pasta
-3. Colocar um `.wav` dentro de `voices`
-4. Clicar em `Abrir XTTS.bat`
-5. Usar no navegador
+Every `.wav` file inside `voices/` becomes an available cloned voice in the UI and API.
 
-## Como usar
+Examples:
 
-1. Abra a interface em `http://localhost:8881/`
-2. Digite o texto
-3. Escolha a voz
-4. Ajuste velocidade, emocao e formato
-5. Clique em `Gerar audio`
-6. Ou?a no preview e baixe o resultado
+- `voices\narrator.wav`
+- `voices\female.wav`
+- `voices\male.wav`
 
-## Vozes
+Recommended voice sample quality:
 
-Cada arquivo `.wav` na pasta `voices` vira uma voz disponivel na interface.
+- 6 to 30 seconds
+- one speaker only
+- no background music
+- low echo and low noise
+- clean and consistent volume
 
-Exemplos:
+## Supported Languages
 
-- `voices\homem.wav`
-- `voices\mulher.wav`
-- `voices\narrador.wav`
+The live source of truth is `GET /languages`. In the current codebase, the supported language IDs are:
 
-Recomendacao para melhor qualidade:
+- `ar` Arabic
+- `da` Danish
+- `de` German
+- `en` English
+- `es` Spanish
+- `fr` French
+- `ja` Japanese
+- `nl` Dutch
+- `no` Norwegian
+- `pt` Portuguese
+- `sv` Swedish
 
-- 6 a 30 segundos
-- uma pessoa so falando
-- sem musica ao fundo
-- sem eco forte
-- audio limpo e com volume consistente
+Notes:
 
-## Formatos
+- send the language code in the `language` field
+- the same cloned voice can be used across different languages
+- prefer `GET /languages` if you want the current runtime list
 
-- `WAV`: formato padrao e mais recomendado
-- `MP3`: opcional, depende de `ffmpeg`
-
-## Enderecos principais
+## Main Endpoints
 
 - Interface: `http://localhost:8881/`
-- API Docs: `http://localhost:8881/docs`
-- Health check: `http://localhost:8881/health`
+- Swagger API Docs: `http://localhost:8881/docs`
+- Quick Guide: `docs/doc.html`
+- Health: `http://localhost:8881/health`
+- Voices: `http://localhost:8881/voices`
+- Languages: `http://localhost:8881/languages`
+- Emotions: `http://localhost:8881/emotions`
 
-## Estrutura principal
+## Full API Reference
 
-- `Instalar XTTS.bat`: instalacao simplificada para codigo-fonte
-- `Abrir XTTS.bat`: abre a aplicacao
-- `system/setup.bat`: setup do ambiente
-- `system/run-xtts.bat`: inicializacao da API
-- `system/build-portable.bat`: gera a versao portable
-- `tools/build_portable.py`: empacota a release
-- `ui/index.html`: interface web
-- `voices/`: pasta das vozes
-- `docs/`: documentacao complementar
-- `examples/`: exemplos de uso da API
+### `GET /health`
 
-## Publicacao no GitHub
+Returns API status information.
 
-Passo a passo recomendado:
+Example response:
 
-1. Execute `Instalar XTTS.bat`
-2. Execute `Abrir XTTS.bat`
-3. Confirme que o modelo carrega e que a interface gera audio
-4. Feche a aplicacao
-5. Execute `system/build-portable.bat`
-6. Pegue a pasta `dist/Evo-XTTS-V2-Windows-Portable`
-7. Compacte em `.zip`
-8. Envie esse `.zip` para GitHub Releases
+```json
+{
+  "status": "ok",
+  "engine": "Evo XTTS V2",
+  "device": "cuda",
+  "model_loaded": true,
+  "voices_loaded": 2
+}
+```
 
-## O que a release portable ja inclui
+### `GET /voices`
 
-- runtime Python
-- aplicacao pronta
-- interface web
-- cache local do modelo em `.tts`
-- pasta `voices` vazia para o usuario adicionar a propria voz
+Lists available cloned voices. Each voice corresponds to a `.wav` file inside `voices/`.
 
-## O que nao deve ir para o repositorio
+Example response:
 
-- `venv/`
-- `.tts/`
-- `dist/`
-- arquivos privados `.wav` em `voices/`
-- audios gerados de teste
-- arquivos temporarios locais
+```json
+[
+  {
+    "id": "male",
+    "name": "male",
+    "gender": "cloned",
+    "lang": "pt",
+    "description": "Voice cloned from male.wav",
+    "languages": ["ar", "da", "de", "en", "es", "fr", "ja", "nl", "no", "pt", "sv"]
+  }
+]
+```
 
-## Troubleshooting rapido
+### `GET /languages`
 
-### O navegador abre mas a interface nao responde
+Lists the accepted `language` codes.
 
-Use `Ctrl+F5` para recarregar sem cache.
+Example response:
 
-### Nenhuma voz aparece
+```json
+[
+  { "id": "pt", "name": "Portuguese" },
+  { "id": "en", "name": "English" },
+  { "id": "es", "name": "Spanish" }
+]
+```
 
-Confirme se existe ao menos um arquivo `.wav` dentro de `voices`.
+### `GET /emotions`
 
-### A API nao sobe
+Lists accepted backend emotion IDs with descriptions and speed modifiers.
 
-Rode `Instalar XTTS.bat` novamente e depois `Abrir XTTS.bat`.
+Example response:
 
-### A GPU nao e reconhecida
+```json
+[
+  {
+    "id": "neutral",
+    "description": "Default balanced voice for narration",
+    "temperature": 0.65,
+    "speed_modifier": 1.0
+  }
+]
+```
 
-Verifique se `nvidia-smi` funciona no Windows. Se nao houver CUDA disponivel, o projeto pode cair para CPU.
+Note:
 
-### MP3 nao funciona
+- to avoid stale documentation, prefer reading emotion IDs from `GET /emotions`
 
-Instale `ffmpeg`.
+### `POST /tts`
 
-## Documentacao adicional
+Generates the complete audio and only returns when finished.
 
-- [Instalacao no Windows](docs/INSTALL-WINDOWS.md)
-- [Publicacao no GitHub](docs/GITHUB-PUBLISH.md)
+JSON fields:
+
+- `text`: required string, 1 to 10000 characters
+- `voice`: optional string, voice ID. If empty, the default available voice is used
+- `language`: optional string, default `pt`
+- `speed`: optional number between `0.5` and `2.0`, default `1.0`
+- `format`: `wav` or `mp3`, default `wav`
+- `emotion`: optional string. Use `GET /emotions` to discover valid IDs
+
+Response:
+
+- `audio/wav` when `format = wav`
+- `audio/mpeg` when `format = mp3`
+
+Example body:
+
+```json
+{
+  "text": "Hello world.",
+  "voice": "male",
+  "language": "en",
+  "speed": 1.0,
+  "format": "wav",
+  "emotion": "neutral"
+}
+```
+
+### `POST /tts/stream`
+
+Generates streaming audio and sends MP3 chunks as they become available.
+
+JSON fields:
+
+- `text`: required string, 1 to 10000 characters
+- `voice`: optional string, voice ID. If empty, the default available voice is used
+- `language`: optional string, default `pt`
+- `speed`: optional number between `0.5` and `2.0`, default `1.0`
+- `emotion`: optional string. Use `GET /emotions` to discover valid IDs
+
+Response:
+
+- always `audio/mpeg`
+- does not accept `format`
+- ideal for progressive playback or download
+
+## curl Examples
+
+### Check status
+
+```bash
+curl http://localhost:8881/health
+```
+
+### List voices
+
+```bash
+curl http://localhost:8881/voices
+```
+
+### List languages
+
+```bash
+curl http://localhost:8881/languages
+```
+
+### List emotions
+
+```bash
+curl http://localhost:8881/emotions
+```
+
+### Generate Portuguese TTS as WAV
+
+```bash
+curl -X POST http://localhost:8881/tts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Hello. This is a Portuguese test.",
+    "voice": "Portuguese_Brazilian_Male_Andre",
+    "language": "pt",
+    "speed": 1.0,
+    "format": "wav"
+  }' \
+  --output output_pt.wav
+```
+
+### Generate English TTS as MP3
+
+```bash
+curl -X POST http://localhost:8881/tts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Hello. This is a test in English.",
+    "voice": "English_Male_DaveL",
+    "language": "en",
+    "speed": 1.0,
+    "format": "mp3"
+  }' \
+  --output output_en.mp3
+```
+
+### Generate Spanish TTS with emotion
+
+```bash
+curl -X POST http://localhost:8881/tts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "Hola. Esta es una demostracion en espanol.",
+    "voice": "Spanish_Male_CarlosC",
+    "language": "es",
+    "speed": 1.0,
+    "format": "mp3",
+    "emotion": "neutral"
+  }' \
+  --output output_es.mp3
+```
+
+### Generate English streaming audio
+
+```bash
+curl -X POST http://localhost:8881/tts/stream \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "This audio is being generated with streaming.",
+    "voice": "English_Male_DaveL",
+    "language": "en",
+    "speed": 1.0,
+    "emotion": "neutral"
+  }' \
+  --output stream_en.mp3
+```
+
+## Python Example
+
+```python
+import requests
+
+base_url = "http://localhost:8881"
+payload = {
+    "text": "Bonjour. Ceci est un test en francais.",
+    "voice": "French_Female_GaelleS",
+    "language": "fr",
+    "speed": 1.0,
+    "format": "mp3",
+    "emotion": "neutral",
+}
+
+response = requests.post(f"{base_url}/tts", json=payload, timeout=300)
+response.raise_for_status()
+
+with open("example_fr.mp3", "wb") as f:
+    f.write(response.content)
+```
+
+Python streaming example:
+
+```python
+import requests
+
+base_url = "http://localhost:8881"
+payload = {
+    "text": "Hallo. Dies ist ein Streaming-Test auf Deutsch.",
+    "voice": "German_Male_AndreasHa",
+    "language": "de",
+    "speed": 1.0,
+    "emotion": "neutral",
+}
+
+with requests.post(f"{base_url}/tts/stream", json=payload, stream=True, timeout=300) as response:
+    response.raise_for_status()
+    with open("stream_de.mp3", "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+```
+
+## PHP Example
+
+A more complete PHP client is available in [examples/example_client.php](examples/example_client.php).
+
+Minimal example:
+
+```php
+<?php
+$payload = [
+    'text' => 'Hello from PHP.',
+    'voice' => 'English_Male_DaveL',
+    'language' => 'en',
+    'speed' => 1.0,
+    'format' => 'mp3',
+    'emotion' => 'neutral',
+];
+
+$ch = curl_init('http://localhost:8881/tts');
+curl_setopt_array($ch, [
+    CURLOPT_POST => true,
+    CURLOPT_POSTFIELDS => json_encode($payload),
+    CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_TIMEOUT => 300,
+]);
+
+$audio = curl_exec($ch);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+curl_close($ch);
+
+if ($httpCode !== 200 || $audio === false) {
+    throw new RuntimeException('Audio generation failed');
+}
+
+file_put_contents(__DIR__ . '/php_en.mp3', $audio);
+```
+
+## Formats
+
+- `WAV`: default and recommended for final audio quality
+- `MP3`: optional, depends on `ffmpeg`
+- `/tts/stream`: always returns `MP3`
+
+## Limits And Behavior
+
+- maximum text length: `10000` characters
+- accepted speed range: `0.5` to `2.0`
+- if `voice` is empty, the API tries to use the default available voice
+- if the voice does not exist, the API returns `400`
+- if the language is unsupported, the API returns `400`
+- if there are no voices inside `voices/`, `GET /voices` returns `404`
+
+## Main Project Files
+
+- `install.bat`: source setup entry point
+- `start.bat`: source launch entry point
+- `system/setup.bat`: environment setup
+- `system/run-xtts.bat`: API startup
+- `system/build-portable.bat`: portable package build script
+- `tools/build_portable.py`: portable package builder
+- `ui/index.html`: web interface
+- `voices/`: voice sample folder
+- `examples/`: API examples
+- `docs/`: supplemental documentation
+
+## Publishing A Portable Release
+
+Recommended workflow:
+
+1. Run `install.bat`.
+2. Run `start.bat`.
+3. Confirm the model loads and the interface generates audio.
+4. Close the application.
+5. Run `system/build-portable.bat`.
+6. Take the folder `dist/Evo-XTTS-V2-Windows-Portable`.
+7. Compress it as a `.zip` file.
+8. Upload that `.zip` file to GitHub Releases.
+
+## What The Portable Release Already Includes
+
+- bundled Python runtime
+- application files
+- web interface
+- local model cache in `.tts`
+- empty `voices/` folder for end-user voice samples
+
+## Quick Troubleshooting
+
+### The Browser Opens But The Interface Does Not Respond
+
+Use `Ctrl+F5` to hard refresh the page.
+
+### No Voices Appear
+
+Make sure there is at least one `.wav` file inside `voices/`.
+
+### The API Does Not Start
+
+Run `install.bat` again and then run `start.bat`.
+
+### The GPU Is Not Recognized
+
+Check whether `nvidia-smi` works on Windows. If CUDA is unavailable, the project can fall back to CPU mode.
+
+### MP3 Does Not Work
+
+Install `ffmpeg`.
+
+## Additional Documentation
+
+- [Quick Guide](docs/doc.html)
+- [Windows Installation](docs/INSTALL-WINDOWS.md)
+- [GitHub Publishing](docs/GITHUB-PUBLISH.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Checklist GitHub](docs/CHECKLIST-GITHUB.md)
-- [Descricao pronta do repositorio](docs/GITHUB-REPO-DESCRIPTION.md)
-- [Texto pronto da primeira release](docs/GITHUB-FIRST-RELEASE.md)
+- [GitHub Checklist](docs/CHECKLIST-GITHUB.md)
+- [Repository Description Draft](docs/GITHUB-REPO-DESCRIPTION.md)
+- [First Release Draft](docs/GITHUB-FIRST-RELEASE.md)
 
-## Politica de contribuicao
+## Contribution Policy
 
-Este projeto esta em manutencao restrita ao autor do repositorio.
+This project is under restricted maintenance by the repository owner.
 
-- contribuicoes externas nao estao abertas neste momento
-- o responsavel pela manutencao e publicacao e o autor do repositorio
-- detalhes em [CONTRIBUTING.md](CONTRIBUTING.md)
+- external contributions are not open at this time
+- the repository owner is responsible for maintenance and releases
+- see [CONTRIBUTING.md](CONTRIBUTING.md) for details
 
-## Autor
+## Author
 
 - Marks Junior

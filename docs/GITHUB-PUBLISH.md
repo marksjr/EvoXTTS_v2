@@ -1,44 +1,44 @@
-# Publicacao no GitHub
+# Publishing On GitHub
 
-## Objetivo certo
+## Recommended Distribution Model
 
-Para usuario simples, publique uma Release portable.
-Nao use o codigo-fonte puro como forma principal de distribuicao.
+For non-technical users, publish the portable release.
+Do not rely on the raw source repository as the primary distribution channel.
 
-## Passo a passo recomendado
+## Recommended Workflow
 
-1. Execute `Instalar XTTS.bat`
-2. Execute `Abrir XTTS.bat` e espere o modelo carregar por completo
-3. Confirme que a interface abre e gera audio
-4. Feche a aplicacao
-5. Execute `system/build-portable.bat`
-6. Pegue a pasta `dist/Evo-XTTS-V2-Windows-Portable`
-7. Compacte em `.zip`
-8. Publique esse `.zip` em GitHub Releases
+1. Run `install.bat`.
+2. Run `start.bat` and wait until the model is fully loaded.
+3. Confirm the interface opens and audio generation works.
+4. Close the application.
+5. Run `system/build-portable.bat`.
+6. Take the folder `dist/Evo-XTTS-V2-Windows-Portable`.
+7. Compress it as a `.zip` file.
+8. Upload that `.zip` file to GitHub Releases.
 
-## O que a release portable deve conter
+## What The Portable Release Should Include
 
-- runtime Python
-- codigo da aplicacao
-- interface web
-- cache local do modelo em `.tts`
-- pasta `voices` vazia ou com apenas um placeholder
-- scripts `Abrir XTTS.bat` e `Instalar XTTS.bat` quando fizer sentido
+- bundled Python runtime
+- application source files
+- web interface
+- local model cache in `.tts`
+- an empty `voices/` folder or placeholder files only
+- `start.bat` and `install.bat`
 
-## O que nao deve ir para o repositorio
+## What Should Not Be Committed To The Repository
 
 - `venv/`
 - `.tts/`
 - `dist/`
-- vozes privadas em `voices/*.wav`
-- audios gerados de teste
-- arquivos temporarios
+- private voice files in `voices/*.wav`
+- generated test audio
+- temporary local files and logs
 
-## Recomendacao de descricao da Release
+## Release Description Checklist
 
-Inclua:
+Include:
 
-- requisitos minimos
-- passo a passo curto de uso
-- aviso de que a primeira carga pode demorar
-- observacao de que WAV e o formato recomendado
+- minimum system requirements
+- short setup and usage steps
+- a note that the first load may take time
+- a note that WAV is the recommended output format

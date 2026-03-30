@@ -1,18 +1,18 @@
-# Descricao pronta para o repositorio
+# Repository Description Draft
 
-## Nome sugerido
+## Suggested Name
 
 Evo XTTS V2 for Windows
 
-## Descricao curta
+## Short Description
 
-Interface local de TTS em portugues do Brasil com clonagem de voz, API FastAPI e suporte a GPU NVIDIA no Windows.
+Local XTTS voice cloning interface with FastAPI, multilingual TTS, and optional NVIDIA GPU acceleration on Windows.
 
-## Descricao longa
+## Long Description
 
-Evo XTTS V2 e uma aplicacao local para gerar audio em portugues do Brasil com clonagem de voz usando Coqui XTTS. O projeto inclui interface web, API FastAPI, instalacao simplificada no Windows, suporte a CUDA quando houver GPU NVIDIA e empacotamento portable para distribuicao via GitHub Releases.
+Evo XTTS V2 is a local application for generating speech with cloned voices using Coqui XTTS. The project includes a browser interface, a FastAPI backend, multilingual text support, simplified Windows setup, CUDA acceleration when an NVIDIA GPU is available, and portable packaging for GitHub Releases.
 
-## Topicos sugeridos
+## Suggested Topics
 
 - tts
 - xtts
@@ -23,4 +23,4 @@ Evo XTTS V2 e uma aplicacao local para gerar audio em portugues do Brasil com cl
 - voice-cloning
 - python
 - cuda
-- portuguese
+- multilingual

@@ -1,30 +1,30 @@
 # Troubleshooting
 
-## O navegador abre mas a interface nao responde
+## The Browser Opens But The Interface Does Not Respond
 
-Force recarregamento com `Ctrl+F5`.
+Hard refresh the page with `Ctrl+F5`.
 
-## Nenhuma voz aparece
+## No Voices Appear
 
-Verifique se existe ao menos um arquivo `.wav` dentro da pasta `voices`.
+Make sure there is at least one `.wav` file inside the `voices/` folder.
 
-## A API nao sobe
+## The API Does Not Start
 
-Execute `Instalar XTTS.bat` novamente e depois tente `Abrir XTTS.bat`.
+Run `install.bat` again and then try `start.bat`.
 
-## Erro com GPU
+## GPU Error
 
-Confirme se `nvidia-smi` funciona no Windows.
-Se a GPU nao estiver disponivel, o projeto pode cair para CPU.
+Confirm that `nvidia-smi` works on Windows.
+If the GPU is unavailable, the project can fall back to CPU mode.
 
-## MP3 nao funciona
+## MP3 Does Not Work
 
-Instale `ffmpeg`.
+Install `ffmpeg`.
 
 ```powershell
 winget install ffmpeg
 ```
 
-## Primeira inicializacao demora muito
+## The First Launch Takes Too Long
 
-Isso e esperado quando o modelo ainda esta sendo preparado ou quando as vozes estao sendo cacheadas.
+This is expected when the model is still being prepared or when voices are being cached for the first time.

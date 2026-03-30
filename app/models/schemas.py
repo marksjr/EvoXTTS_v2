@@ -6,21 +6,23 @@ EMOTION_TYPE = Literal["neutro", "animado", "calmo", "serio", "triste", "raiva"]
 
 
 class TTSRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=10000, description="Texto para sintetizar")
-    voice: str = Field(default="", description="ID da voz (nome do arquivo .wav sem extensao)")
-    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Velocidade da fala")
-    format: Literal["mp3", "wav"] = Field(default="wav", description="Formato de saida")
+    text: str = Field(..., min_length=1, max_length=10000, description="Text to synthesize")
+    voice: str = Field(default="", description="Voice ID (.wav filename without extension)")
+    language: str = Field(default="pt", description="Text language code")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speech speed")
+    format: Literal["mp3", "wav"] = Field(default="wav", description="Output format")
     emotion: Optional[EMOTION_TYPE] = Field(
         default=None,
-        description="Emocao da voz: neutro, animado, calmo, serio, triste, raiva",
+        description="Voice emotion: neutro, animado, calmo, serio, triste, raiva",
     )
 
 
 class TTSStreamRequest(BaseModel):
-    text: str = Field(..., min_length=1, max_length=10000, description="Texto para sintetizar")
-    voice: str = Field(default="", description="ID da voz")
-    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Velocidade da fala")
-    emotion: Optional[EMOTION_TYPE] = Field(default=None, description="Emocao da voz")
+    text: str = Field(..., min_length=1, max_length=10000, description="Text to synthesize")
+    voice: str = Field(default="", description="Voice ID")
+    language: str = Field(default="pt", description="Text language code")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0, description="Speech speed")
+    emotion: Optional[EMOTION_TYPE] = Field(default=None, description="Voice emotion")
 
 
 class HealthResponse(BaseModel):
@@ -37,3 +39,4 @@ class VoiceInfo(BaseModel):
     gender: str
     lang: str
     description: str
+    languages: list[str] = Field(default_factory=list)

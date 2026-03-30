@@ -1,4 +1,4 @@
-"""Script de inicializacao da API Evo XTTS V2."""
+"""Evo XTTS V2 API startup script."""
 
 import json
 import os
@@ -19,7 +19,7 @@ from app.core.config import HOST, PORT
 
 
 def wait_until_ready_and_open_browser() -> None:
-    """Abre o navegador somente quando a API responder como pronta."""
+    """Opens the browser only when the API responds as ready."""
     url_host = "localhost" if HOST == "0.0.0.0" else HOST
     health_url = f"http://{url_host}:{PORT}/health"
     app_url = f"http://{url_host}:{PORT}/"

@@ -18,17 +18,18 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info(f"Iniciando Evo XTTS V2 API (device: {DEVICE})")
+    logger.info(f"Starting Evo XTTS V2 API (device: {DEVICE})")
     tts_service.load_model()
     voices = tts_service.get_voices()
-    logger.info(f"API pronta — {len(voices)} voz(es) carregada(s)")
+    logger.info(f"API ready — {len(voices)} voice(s) available, caching in background...")
+    tts_service.preload_voices_background()
     yield
-    logger.info("Encerrando API TTS")
+    logger.info("Shutting down TTS API")
 
 
 app = FastAPI(
     title="Evo XTTS V2 API",
-    description="API local de Text-to-Speech pt-BR usando Evo XTTS V2 com clonagem de voz",
+    description="Local multi-language Text-to-Speech API using Evo XTTS V2 with voice cloning",
     version="1.0.0",
     lifespan=lifespan,
 )

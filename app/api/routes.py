@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response, StreamingResponse
-from app.models.schemas import TTSRequest, TTSStreamRequest, HealthResponse, VoiceInfo
+
+from app.models.schemas import HealthResponse, TTSRequest, TTSStreamRequest, VoiceInfo
 from app.services.tts_service import tts_service
 
 router = APIRouter()
@@ -24,32 +25,37 @@ async def list_voices():
     if not voices:
         raise HTTPException(
             404,
-            "Nenhuma voz encontrada. Coloque arquivos .wav (6-30s) na pasta 'voices/'.",
+            "No voices found. Place .wav files (6-30s) in the 'voices/' folder.",
         )
-    return [VoiceInfo(**v) for v in voices]
+    return [VoiceInfo(**voice) for voice in voices]
+
+
+@router.get("/languages")
+async def list_languages():
+    return tts_service.get_supported_languages()
 
 
 @router.get("/emotions")
 async def list_emotions():
-    """Lista todas as emoções disponíveis e seus efeitos."""
     from app.core.config import EMOTIONS
-    result = []
+
     descriptions = {
-        "neutro": "Voz padrão, equilibrada para narração",
-        "animado": "Voz empolgada, mais variação e energia",
-        "calmo": "Voz tranquila, ritmo lento e suave",
-        "serio": "Voz firme, tom formal e estável",
-        "triste": "Voz baixa, ritmo lento e melancólico",
-        "raiva": "Voz intensa, mais variação e velocidade",
+        "neutro": "Default balanced voice for narration",
+        "animado": "Excited voice with more variation and energy",
+        "calmo": "Calm voice with slow and smooth rhythm",
+        "serio": "Firm voice with formal and stable tone",
+        "triste": "Low voice with slow and melancholic rhythm",
+        "raiva": "Intense voice with more variation and speed",
     }
-    for name, params in EMOTIONS.items():
-        result.append({
+    return [
+        {
             "id": name,
             "description": descriptions.get(name, ""),
             "temperature": params["temperature"],
             "speed_modifier": params["speed_mod"],
-        })
-    return result
+        }
+        for name, params in EMOTIONS.items()
+    ]
 
 
 @router.post("/tts")
@@ -59,17 +65,23 @@ async def text_to_speech(req: TTSRequest):
     if not tts_service.validate_voice(voice):
         raise HTTPException(
             400,
-            f"Voz '{voice}' não disponível. "
-            f"Coloque '{voice}.wav' na pasta 'voices/' ou use GET /voices.",
+            f"Voice '{voice}' not available. Place '{voice}.wav' in the 'voices/' folder or use GET /voices.",
         )
+
+    if not tts_service.validate_language(req.language):
+        raise HTTPException(400, f"Language '{req.language}' not supported.")
 
     try:
         audio_bytes = await tts_service.generate(
-            text=req.text, voice=voice, speed=req.speed, fmt=req.format,
+            text=req.text,
+            voice=voice,
+            language=req.language,
+            speed=req.speed,
+            fmt=req.format,
             emotion=req.emotion,
         )
-    except Exception as e:
-        raise HTTPException(500, f"Erro na geração: {str(e)}")
+    except Exception as exc:
+        raise HTTPException(500, f"Generation error: {exc}") from exc
 
     media_type = "audio/mpeg" if req.format == "mp3" else "audio/wav"
     return Response(
@@ -84,11 +96,17 @@ async def text_to_speech_stream(req: TTSStreamRequest):
     voice = req.voice or tts_service.get_default_voice()
 
     if not tts_service.validate_voice(voice):
-        raise HTTPException(400, f"Voz '{voice}' não disponível.")
+        raise HTTPException(400, f"Voice '{voice}' not available.")
+
+    if not tts_service.validate_language(req.language):
+        raise HTTPException(400, f"Language '{req.language}' not supported.")
 
     async def audio_generator():
         async for chunk in tts_service.generate_stream(
-            text=req.text, voice=voice, speed=req.speed,
+            text=req.text,
+            voice=voice,
+            language=req.language,
+            speed=req.speed,
             emotion=req.emotion,
         ):
             yield chunk
@@ -98,4 +116,3 @@ async def text_to_speech_stream(req: TTSStreamRequest):
         media_type="audio/mpeg",
         headers={"Content-Disposition": 'attachment; filename="tts_stream.mp3"'},
     )
-

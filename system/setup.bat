@@ -2,62 +2,62 @@
 setlocal
 cd /d "%~dp0"
 cd ..
-title Evo XTTS V2 - Instalador
+title Evo XTTS V2 - Installer
 
 echo ============================================
-echo  Evo XTTS V2 - Instalador para Windows
+echo  Evo XTTS V2 - Windows Installer
 echo ============================================
 echo.
 
 if not exist "venv" (
-    echo Criando ambiente virtual...
+    echo Creating virtual environment...
     python -m venv venv
     if errorlevel 1 goto :python_error
 )
 
-echo Ativando ambiente virtual...
+echo Activating virtual environment...
 call venv\Scripts\activate.bat
 if errorlevel 1 goto :venv_error
 
-echo Atualizando pip...
+echo Upgrading pip...
 python -m pip install --upgrade pip
 
 echo.
-echo Detectando hardware...
+echo Detecting hardware...
 where nvidia-smi >nul 2>nul
 if %errorlevel%==0 (
-    echo GPU NVIDIA detectada. Instalando PyTorch com CUDA...
+    echo NVIDIA GPU detected. Installing PyTorch with CUDA...
     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 ) else (
-    echo GPU NVIDIA nao detectada. Instalando PyTorch para CPU...
+    echo NVIDIA GPU not detected. Installing PyTorch for CPU...
     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 )
 if errorlevel 1 goto :install_error
 
 echo.
-echo Instalando dependencias do projeto...
+echo Installing project dependencies...
 pip install -r system\requirements.txt
 if errorlevel 1 goto :install_error
 
 if not exist "voices" (
-    echo Criando pasta voices...
+    echo Creating voices folder...
     mkdir voices
 )
 
 echo.
-echo Verificando ambiente...
+echo Checking environment...
 python -c "import torch; print('Torch:', torch.__version__); print('Device:', 'cuda' if torch.cuda.is_available() else 'cpu')"
 
 echo.
 echo ============================================
-echo  Pronto
+echo  Done
 echo ============================================
 echo.
-echo  1. Coloque um ou mais arquivos .wav na pasta voices
-echo  2. Clique em Abrir XTTS.bat
-echo  3. O navegador vai abrir sozinho em http://localhost:8881
+echo  1. Place one or more .wav files in the voices folder
+echo  2. Run start.bat
+echo  3. The browser will open automatically at http://localhost:8881
 echo.
-echo  Se quiser MP3, tenha ffmpeg instalado:
+echo  For MP3 support, install ffmpeg:
 echo  winget install ffmpeg
 echo.
 pause
@@ -65,21 +65,19 @@ exit /b 0
 
 :python_error
 echo.
-echo Python nao foi encontrado.
-echo Instale Python 3.10+ e marque a opcao "Add Python to PATH".
+echo Python not found.
+echo Install Python 3.10+ and check "Add Python to PATH".
 pause
 exit /b 1
 
 :venv_error
 echo.
-echo Falha ao ativar o ambiente virtual.
+echo Failed to activate virtual environment.
 pause
 exit /b 1
 
 :install_error
 echo.
-echo Falha na instalacao de dependencias.
+echo Failed to install dependencies.
 pause
 exit /b 1
-
-

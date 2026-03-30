@@ -13,10 +13,10 @@ COPY_FILES = [
     "system/requirements.txt",
     "system/run-xtts.bat",
     "ui/index.html",
-    "docs/ajuda.html",
+    "docs/doc.html",
     "README.md",
-    "Abrir XTTS.bat",
-    "Instalar XTTS.bat",
+    "start.bat",
+    "install.bat",
 ]
 
 COPY_DIRS = [
@@ -25,27 +25,27 @@ COPY_DIRS = [
 ]
 
 
-PORTABLE_README = """EVO XTTS V2 PORTABLE PARA WINDOWS
+PORTABLE_README = """EVO XTTS V2 PORTABLE FOR WINDOWS
 =================================
 
-Como usar:
+How to use:
 
-1. Coloque seus arquivos .wav dentro da pasta voices
-2. Clique duas vezes em "Abrir XTTS.bat"
-3. Aguarde o navegador abrir
-4. Use a interface em http://localhost:8881/
+1. Place your `.wav` voice files inside the `voices` folder
+2. Double-click `start.bat`
+3. Wait for the browser to open
+4. Use the interface at http://localhost:8881/
 
-Importante:
+Important:
 
-- Esta versao usa o runtime Python incluido na pasta runtime
-- O cache do modelo ja acompanha a release
-- A pasta voices vai vazia para voce adicionar sua propria voz
-- Se quiser MP3, instale ffmpeg
-- O formato WAV funciona como padrao e e o recomendado
+- this version uses the bundled Python runtime inside `runtime`
+- the model cache is already included
+- the `voices` folder is intentionally empty so you can add your own voice files
+- install `ffmpeg` if you want MP3 output
+- WAV is the default and recommended format
 
-Para encerrar:
+To close the app:
 
-- Feche a janela preta que ficou aberta
+- close the black console window that remains open
 """
 
 
@@ -85,10 +85,10 @@ def main() -> None:
     tts_cache_dir = ROOT / ".tts"
 
     if not runtime_dir.exists():
-        raise SystemExit("A pasta 'venv' nao existe. Execute system\setup.bat antes de gerar o portable.")
+        raise SystemExit("The 'venv' folder does not exist. Run system\\setup.bat before building the portable package.")
 
     if not tts_cache_dir.exists():
-        raise SystemExit("A pasta '.tts' nao existe. Inicie a aplicacao uma vez para baixar o modelo antes de gerar o portable.")
+        raise SystemExit("The '.tts' folder does not exist. Start the application once to download the model before building the portable package.")
 
     DIST_ROOT.mkdir(exist_ok=True)
     safe_rmtree(PACKAGE_DIR)
@@ -109,10 +109,10 @@ def main() -> None:
     prepare_voices_dir(PACKAGE_DIR / "voices")
     copy_tree(runtime_dir, PACKAGE_DIR / "runtime")
 
-    (PACKAGE_DIR / "LEIA-ME.txt").write_text(PORTABLE_README, encoding="utf-8")
+    (PACKAGE_DIR / "README.txt").write_text(PORTABLE_README, encoding="utf-8")
 
-    print(f"Portable criado em: {PACKAGE_DIR}")
-    print("Proximo passo: compacte a pasta e envie como release do GitHub.")
+    print(f"Portable created at: {PACKAGE_DIR}")
+    print("Next step: compress the folder and upload it as a GitHub Release asset.")
 
 
 if __name__ == "__main__":

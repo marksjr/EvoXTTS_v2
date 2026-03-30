@@ -2,6 +2,30 @@ import re
 from app.core.config import CHUNK_TARGET_MAX_CHARS, CHUNK_ABSOLUTE_MAX_CHARS
 
 
+def preprocess_text(text: str, language: str) -> str:
+    if language == "pt":
+        return preprocess_text_ptbr(text)
+    return _preprocess_text_generic(text)
+
+
+def _preprocess_text_generic(text: str) -> str:
+    text = text.strip()
+    text = text.replace("\u201c", '"').replace("\u201d", '"')
+    text = text.replace("\u2018", "'").replace("\u2019", "'")
+    text = text.replace("\u00ab", '"').replace("\u00bb", '"')
+    text = text.replace("\u2014", ", ")
+    text = text.replace("\u2013", ", ")
+    text = text.replace("\u2026", "...")
+    text = re.sub(r"[\u00a0\u200b\u200c\u200d\u2060\ufeff]", " ", text)
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[#*_~`|<>{}\[\]\\^]", "", text)
+    text = re.sub(r"\.{4,}", "...", text)
+    text = re.sub(r"!{2,}", "!", text)
+    text = re.sub(r"\?{2,}", "?", text)
+    return text
+
+
 def preprocess_text_ptbr(text: str) -> str:
     """Pré-processamento de texto para pt-BR.
     Trata acentos, cedilha, caracteres especiais e converte

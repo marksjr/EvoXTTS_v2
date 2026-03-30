@@ -1,25 +1,26 @@
-# Checklist antes de subir para GitHub
+# GitHub Upload Checklist
 
-## Repositorio
+## Repository
 
-- [ ] `venv/` fora do repositorio
-- [ ] `.tts/` fora do repositorio
-- [ ] `dist/` fora do repositorio
-- [ ] nenhum `.wav` privado em `voices/`
-- [ ] README atualizado com instrucoes simples
-- [ ] docs de instalacao e troubleshooting presentes
+- [ ] `venv/` is not committed
+- [ ] `.tts/` is not committed
+- [ ] `dist/` is not committed
+- [ ] no private `.wav` files remain tracked in `voices/`
+- [ ] `README.md` is up to date
+- [ ] install and troubleshooting docs are present
 
-## Teste do codigo-fonte
+## Source Build Test
 
-- [ ] `Instalar XTTS.bat` funciona
-- [ ] `Abrir XTTS.bat` funciona
-- [ ] interface abre no navegador
-- [ ] `/health` retorna `ok`
-- [ ] gera audio WAV
+- [ ] `install.bat` works
+- [ ] `start.bat` works
+- [ ] the interface opens in the browser
+- [ ] `/health` returns `ok`
+- [ ] WAV generation works
+- [ ] streaming generation works
 
-## Teste da release portable
+## Portable Release Test
 
-- [ ] `system/build-portable.bat` gera a pasta final
-- [ ] a pasta portable abre em outra maquina ou ambiente limpo
-- [ ] o modelo ja esta incluido na release
-- [ ] a pessoa consegue usar sem instalar Python manualmente
+- [ ] `system/build-portable.bat` creates the final package
+- [ ] the portable folder runs on a clean machine or environment
+- [ ] the model cache is already included in the release
+- [ ] the user can run it without manually installing Python

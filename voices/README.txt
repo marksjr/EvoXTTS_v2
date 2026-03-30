@@ -1,13 +1,13 @@
-Coloque aqui seus arquivos .wav de referencia.
+Place your reference `.wav` files here.
 
-Cada arquivo .wav vira uma voz disponivel na interface.
-Exemplo:
-- voices\narrador.wav
-- voices\mulher.wav
-- voices\homem.wav
+Each `.wav` file becomes an available voice in the interface and API.
+Examples:
+- voices\narrator.wav
+- voices\female.wav
+- voices\male.wav
 
-Recomendacao:
-- 6 a 30 segundos
-- uma pessoa so falando
-- sem musica ao fundo
-- audio limpo
+Recommended sample quality:
+- 6 to 30 seconds
+- one speaker only
+- no background music
+- clean audio

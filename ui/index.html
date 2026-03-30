@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -227,10 +227,7 @@
   }
 
   .grid,
-  .meta-list,
-  .voice-list,
-  .emotion-list,
-  .choice-row {
+  .meta-list {
     display: grid;
     gap: 12px;
   }
@@ -292,27 +289,9 @@
     accent-color: var(--accent-strong);
   }
 
-  .choice-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-
-  .chip {
-    padding: 14px;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    background: rgba(8, 13, 20, 0.72);
-    cursor: pointer;
-    transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
-  }
-
-  .chip:hover,
   button:hover,
   .button-link:hover { transform: translateY(-1px); }
 
-  .chip.active {
-    border-color: rgba(110, 231, 200, 0.4);
-    background: linear-gradient(180deg, rgba(110, 231, 200, 0.12), rgba(7, 12, 19, 0.88));
-  }
-
-  .chip strong,
   .card-list-item strong {
     display: block;
     margin-bottom: 6px;
@@ -386,7 +365,6 @@
     .hero,
     .layout,
     .grid,
-    .choice-row,
     .hero-grid { grid-template-columns: 1fr; }
 
     .shell { padding: 16px 14px 28px; }
@@ -410,14 +388,14 @@
         <div class="status-head">
           <div>
             <span class="eyebrow">Evo XTTS V2</span>
-            <h2 style="margin-top:14px;">Status da API</h2>
+            <h2 style="margin-top:14px;">API Status</h2>
           </div>
           <div class="inline">
             <div class="status-pill">
               <span class="status-dot" id="statusDot"></span>
-              <span id="statusText">Carregando...</span>
+              <span id="statusText">Loading...</span>
             </div>
-            <button class="ghost small" id="refreshMetaBtn">Atualizar</button>
+            <button class="ghost small" id="refreshMetaBtn">Refresh</button>
           </div>
         </div>
         <div class="hero-grid">
@@ -430,18 +408,18 @@
             <div class="stat-value" id="deviceStat">...</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Vozes</div>
+            <div class="stat-label">Voices</div>
             <div class="stat-value" id="voicesStat">0</div>
           </div>
           <div class="stat">
-            <div class="stat-label">Formato padrao</div>
+            <div class="stat-label">Default Format</div>
             <div class="stat-value">WAV</div>
           </div>
         </div>
         <div class="meta-list" id="metaList">
           <div class="card-list-item">
-            <strong>Inicializando</strong>
-            <span class="muted">Aguardando resposta da API local.</span>
+            <strong>Initializing</strong>
+            <span class="muted">Waiting for local API response.</span>
           </div>
         </div>
       </div>
@@ -451,8 +429,8 @@
       <div class="panel">
         <div class="panel-title">
           <div>
-            <h2>Gerador</h2>
-            <p>Todos os parametros centrais em uma unica tela.</p>
+            <h2>Generator</h2>
+            <p>All core parameters in a single view.</p>
           </div>
           <a class="button-link ghost small" href="/docs" target="_blank" rel="noreferrer">FastAPI Docs</a>
         </div>
@@ -460,104 +438,76 @@
         <div class="grid">
           <div class="field full">
             <div class="inline">
-              <label for="textInput">Texto</label>
-              <span class="hint"><span id="charCount">0</span> / 10000 caracteres</span>
+              <label for="textInput">Text</label>
+              <span class="hint"><span id="charCount">0</span> / 10000 characters</span>
             </div>
-            <textarea id="textInput" placeholder="Digite o texto que sera sintetizado..."></textarea>
+            <textarea id="textInput" placeholder="Enter the text to be synthesized..."></textarea>
           </div>
 
           <div class="field">
-            <label for="voiceSelect">Voz</label>
-            <select id="voiceSelect">
-              <option value="">Carregando vozes...</option>
+            <label for="languageSelect">Language</label>
+            <select id="languageSelect">
+              <option value="pt">Portuguese</option>
             </select>
           </div>
 
           <div class="field">
-            <label for="emotionSelect">Emocao</label>
+            <label for="voiceSelect">Voice</label>
+            <select id="voiceSelect">
+              <option value="">Loading voices...</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="emotionSelect">Emotion</label>
             <select id="emotionSelect">
-              <option value="">Neutro padrao</option>
+              <option value="">Neutral (default)</option>
             </select>
           </div>
 
           <div class="field">
             <div class="inline">
-              <label for="speedRange">Velocidade</label>
+              <label for="speedRange">Speed</label>
               <strong id="speedValue">1.0</strong>
             </div>
             <input id="speedRange" type="range" min="0.5" max="2" step="0.05" value="1">
           </div>
 
           <div class="field">
-            <label for="formatSelect">Formato</label>
+            <label for="formatSelect">Format</label>
             <select id="formatSelect">
               <option value="wav" selected>WAV</option>
               <option value="mp3">MP3</option>
             </select>
           </div>
 
-          <div class="field full">
-            <label>Modo de geracao</label>
-            <div class="choice-row">
-              <div class="chip active" data-mode="tts">
-                <strong>Completo</strong>
-                <span class="muted">Usa <code>POST /tts</code> com saida WAV ou MP3.</span>
-              </div>
-              <div class="chip" data-mode="stream">
-                <strong>Streaming</strong>
-                <span class="muted">Usa <code>POST /tts/stream</code> e retorna MP3.</span>
-              </div>
-              <div class="chip" data-mode="download">
-                <strong>Completo + download</strong>
-                <span class="muted">Gera, reproduz e dispara o download na sequencia.</span>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="actions">
-          <button class="primary" id="generateBtn">Gerar audio</button>
-          <button class="secondary" id="downloadBtn" disabled>Baixar ultimo audio</button>
-          <button class="ghost" id="copyCurlBtn">Copiar curl</button>
-          <button class="ghost" id="loadSampleBtn">Texto de exemplo</button>
-          <button class="ghost" id="clearBtn">Limpar</button>
+          <button class="primary" id="generateBtn">Generate Audio</button>
+          <button class="secondary" id="streamBtn">Generate Streaming</button>
+          <button class="secondary" id="downloadBtn" disabled>Download</button>
         </div>
 
-        <div class="response-box" id="responseBox">Nenhuma geracao executada ainda.</div>
+        <div class="response-box" id="responseBox">No generation performed yet.</div>
       </div>
 
       <div class="panel">
         <div class="panel-title">
           <div>
             <h2>Preview</h2>
-            <p>Ultima resposta recebida pronta para escuta e inspecao.</p>
+            <p>Last response received, ready for playback and inspection.</p>
           </div>
         </div>
 
         <div class="preview">
           <div class="inline">
-            <strong id="previewTitle">Sem audio</strong>
-            <span class="muted" id="previewMeta">Aguardando geracao</span>
+            <strong id="previewTitle">No audio</strong>
+            <span class="muted" id="previewMeta">Waiting for generation</span>
           </div>
           <audio id="audioPlayer" controls></audio>
           <div class="toolbar">
-            <span class="muted small" id="blobInfo">Nenhum blob disponivel.</span>
-          </div>
-        </div>
-
-        <h3 style="margin-top:20px;">Vozes carregadas</h3>
-        <div class="voice-list" id="voiceList">
-          <div class="card-list-item">
-            <strong>Nenhuma voz carregada</strong>
-            <span class="muted">Aguardando leitura de <code>GET /voices</code>.</span>
-          </div>
-        </div>
-
-        <h3 style="margin-top:20px;">Emocoes</h3>
-        <div class="emotion-list" id="emotionList">
-          <div class="card-list-item">
-            <strong>Carregando</strong>
-            <span class="muted">Buscando <code>GET /emotions</code>.</span>
+            <span class="muted small" id="blobInfo">No blob available.</span>
           </div>
         </div>
       </div>
@@ -566,27 +516,26 @@
 
 <script>
   const state = {
-    mode: "tts",
     lastBlob: null,
     lastFilename: "",
     lastMime: "",
     lastDurationMs: 0,
     timerId: null,
+    allVoices: [],
   };
 
-  const elements = {
+  const el = {
     textInput: document.getElementById("textInput"),
     charCount: document.getElementById("charCount"),
     voiceSelect: document.getElementById("voiceSelect"),
+    languageSelect: document.getElementById("languageSelect"),
     emotionSelect: document.getElementById("emotionSelect"),
     speedRange: document.getElementById("speedRange"),
     speedValue: document.getElementById("speedValue"),
     formatSelect: document.getElementById("formatSelect"),
     generateBtn: document.getElementById("generateBtn"),
+    streamBtn: document.getElementById("streamBtn"),
     downloadBtn: document.getElementById("downloadBtn"),
-    copyCurlBtn: document.getElementById("copyCurlBtn"),
-    loadSampleBtn: document.getElementById("loadSampleBtn"),
-    clearBtn: document.getElementById("clearBtn"),
     responseBox: document.getElementById("responseBox"),
     audioPlayer: document.getElementById("audioPlayer"),
     previewTitle: document.getElementById("previewTitle"),
@@ -595,31 +544,37 @@
     statusDot: document.getElementById("statusDot"),
     statusText: document.getElementById("statusText"),
     metaList: document.getElementById("metaList"),
-    voiceList: document.getElementById("voiceList"),
-    emotionList: document.getElementById("emotionList"),
     engineStat: document.getElementById("engineStat"),
     deviceStat: document.getElementById("deviceStat"),
     voicesStat: document.getElementById("voicesStat"),
     refreshMetaBtn: document.getElementById("refreshMetaBtn"),
-    modeChips: Array.from(document.querySelectorAll(".chip")),
+  };
+
+  const emotionLabels = {
+    neutro: "Neutral",
+    animado: "Animated",
+    calmo: "Calm",
+    serio: "Serious",
+    triste: "Sad",
+    raiva: "Angry",
   };
 
   function setResponse(message, kind = "") {
-    elements.responseBox.textContent = message;
-    elements.responseBox.className = "response-box" + (kind ? " " + kind : "");
+    el.responseBox.textContent = message;
+    el.responseBox.className = "response-box" + (kind ? " " + kind : "");
   }
 
-  function startGenerationTimer(startedAt, methodLabel) {
-    stopGenerationTimer();
+  function startTimer(startedAt) {
+    stopTimer();
     const update = () => {
-      const elapsedSeconds = ((performance.now() - startedAt) / 1000).toFixed(1);
-      setResponse(`Enviando ${methodLabel}...\nTempo decorrido: ${elapsedSeconds}s`);
+      const s = ((performance.now() - startedAt) / 1000).toFixed(1);
+      setResponse(`Generating audio...\nElapsed: ${s}s`);
     };
     update();
     state.timerId = window.setInterval(update, 100);
   }
 
-  function stopGenerationTimer() {
+  function stopTimer() {
     if (state.timerId !== null) {
       window.clearInterval(state.timerId);
       state.timerId = null;
@@ -627,166 +582,119 @@
   }
 
   function updateCharCount() {
-    elements.charCount.textContent = String(elements.textInput.value.length);
-  }
-
-  function setMode(mode) {
-    state.mode = mode;
-    elements.modeChips.forEach((chip) => {
-      chip.classList.toggle("active", chip.dataset.mode === mode);
-    });
-
-    const isStream = mode === "stream";
-    elements.formatSelect.value = isStream ? "mp3" : elements.formatSelect.value;
-    elements.formatSelect.disabled = isStream;
+    el.charCount.textContent = String(el.textInput.value.length);
   }
 
   function buildPayload() {
     const payload = {
-      text: elements.textInput.value.trim(),
-      voice: elements.voiceSelect.value,
-      speed: Number(elements.speedRange.value),
+      text: el.textInput.value.trim(),
+      voice: el.voiceSelect.value,
+      language: el.languageSelect.value,
+      speed: Number(el.speedRange.value),
+      format: el.formatSelect.value,
     };
-
-    if (state.mode !== "stream") {
-      payload.format = elements.formatSelect.value;
+    if (el.emotionSelect.value) {
+      payload.emotion = el.emotionSelect.value;
     }
-
-    if (elements.emotionSelect.value) {
-      payload.emotion = elements.emotionSelect.value;
-    }
-
     return payload;
   }
 
-  function getRequestInfo() {
-    if (state.mode === "stream") {
-      return {
-        endpoint: "/tts/stream",
-        methodLabel: "POST /tts/stream",
-        format: "mp3",
-      };
-    }
-
-    return {
-      endpoint: "/tts",
-      methodLabel: "POST /tts",
-      format: elements.formatSelect.value,
-    };
-  }
-
   function setBlob(blob, filename, mime) {
-    if (state.lastBlob) {
-      URL.revokeObjectURL(elements.audioPlayer.src);
-    }
-
+    if (state.lastBlob) URL.revokeObjectURL(el.audioPlayer.src);
     state.lastBlob = blob;
     state.lastFilename = filename;
     state.lastMime = mime;
-    const objectUrl = URL.createObjectURL(blob);
-    elements.audioPlayer.src = objectUrl;
-    elements.downloadBtn.disabled = false;
-    elements.previewTitle.textContent = filename;
-    const durationLabel = state.lastDurationMs
-      ? `Gerado em ${(state.lastDurationMs / 1000).toFixed(2)}s`
-      : "Geracao concluida";
-    elements.previewMeta.textContent = `${mime} | ${durationLabel}`;
-    elements.blobInfo.textContent = `${blob.size.toLocaleString("pt-BR")} bytes`;
+    el.audioPlayer.src = URL.createObjectURL(blob);
+    el.downloadBtn.disabled = false;
+    el.previewTitle.textContent = filename;
+    const dur = state.lastDurationMs
+      ? `Generated in ${(state.lastDurationMs / 1000).toFixed(2)}s`
+      : "Generation complete";
+    el.previewMeta.textContent = `${mime} | ${dur}`;
+    el.blobInfo.textContent = `${blob.size.toLocaleString("en-US")} bytes`;
+  }
+
+  function filterVoicesByLanguage() {
+    const lang = el.languageSelect.value;
+    const filtered = state.allVoices.filter((v) => v.lang === lang);
+    el.voiceSelect.innerHTML = filtered.length
+      ? filtered.map((v) => `<option value="${v.id}">${v.name}</option>`).join("")
+      : `<option value="">No voices for this language</option>`;
   }
 
   async function refreshMeta() {
     try {
-      const [healthRes, voicesRes, emotionsRes] = await Promise.all([
+      const [healthRes, voicesRes, emotionsRes, languagesRes] = await Promise.all([
         fetch("/health"),
         fetch("/voices"),
         fetch("/emotions"),
+        fetch("/languages"),
       ]);
 
       const health = await healthRes.json();
       const voices = voicesRes.ok ? await voicesRes.json() : [];
       const emotions = emotionsRes.ok ? await emotionsRes.json() : [];
+      const languages = languagesRes.ok ? await languagesRes.json() : [];
 
-      elements.engineStat.textContent = health.engine || "Evo XTTS V2";
-      elements.deviceStat.textContent = health.device || "-";
-      elements.voicesStat.textContent = String(health.voices_loaded ?? voices.length);
+      el.engineStat.textContent = health.engine || "Evo XTTS V2";
+      el.deviceStat.textContent = health.device || "-";
+      el.voicesStat.textContent = String(health.voices_loaded ?? voices.length);
 
       const status = health.status || "loading";
-      elements.statusDot.className = `status-dot ${status === "ok" ? "ok" : "loading"}`;
-      elements.statusText.textContent = status === "ok" ? "API pronta" : "API carregando";
+      el.statusDot.className = `status-dot ${status === "ok" ? "ok" : "loading"}`;
+      el.statusText.textContent = status === "ok" ? "API Ready" : "API Loading";
 
-      elements.metaList.innerHTML = `
+      el.metaList.innerHTML = `
         <div class="card-list-item">
-          <strong>Modelo carregado</strong>
-          <span class="muted">${health.model_loaded ? "Sim" : "Nao"}</span>
+          <strong>Model Loaded</strong>
+          <span class="muted">${health.model_loaded ? "Yes" : "No"}</span>
         </div>
         <div class="card-list-item">
-          <strong>Endpoint principal</strong>
+          <strong>Main Endpoint</strong>
           <span class="muted">http://localhost:8881/tts</span>
         </div>
         <div class="card-list-item">
           <strong>Streaming</strong>
-          <span class="muted">MP3 progressivo via /tts/stream</span>
+          <span class="muted">Progressive MP3 via /tts/stream</span>
         </div>
       `;
 
-      elements.voiceSelect.innerHTML = voices.length
-        ? voices.map((voice) => `<option value="${voice.id}">${voice.name} (${voice.id})</option>`).join("")
-        : `<option value="">Nenhuma voz encontrada</option>`;
+      if (languages.length) {
+        const availableLangs = new Set(voices.map((v) => v.lang));
+        el.languageSelect.innerHTML = languages
+          .filter((l) => availableLangs.has(l.id))
+          .map((l) => `<option value="${l.id}">${l.name}</option>`)
+          .join("");
+      }
 
-      elements.voiceList.innerHTML = voices.length
-        ? voices.map((voice) => `
-            <div class="card-list-item">
-              <strong>${voice.name}</strong>
-              <span class="muted">ID: ${voice.id}</span><br>
-              <span class="muted">${voice.description}</span>
-            </div>
-          `).join("")
-        : `
-          <div class="card-list-item">
-            <strong>Nenhuma voz encontrada</strong>
-            <span class="muted">Adicione arquivos .wav na pasta voices.</span>
-          </div>
-        `;
+      state.allVoices = voices;
+      filterVoicesByLanguage();
 
-      elements.emotionSelect.innerHTML = `<option value="">Neutro padrao</option>` + emotions.map((emotion) => (
-        `<option value="${emotion.id}">${emotion.id} (${emotion.speed_modifier}x)</option>`
+      el.emotionSelect.innerHTML = `<option value="">Neutral (default)</option>` + emotions.map((e) => (
+        `<option value="${e.id}">${emotionLabels[e.id] || e.id} (${e.speed_modifier}x)</option>`
       )).join("");
-
-      elements.emotionList.innerHTML = emotions.map((emotion) => `
-        <div class="card-list-item">
-          <strong>${emotion.id}</strong>
-          <span class="muted">${emotion.description}</span><br>
-          <span class="muted">temperature ${emotion.temperature} | speed mod ${emotion.speed_modifier}x</span>
-        </div>
-      `).join("");
     } catch (error) {
-      elements.statusDot.className = "status-dot error";
-      elements.statusText.textContent = "Falha ao ler a API";
-      elements.metaList.innerHTML = `
+      el.statusDot.className = "status-dot error";
+      el.statusText.textContent = "Failed to reach API";
+      el.metaList.innerHTML = `
         <div class="card-list-item">
-          <strong>Erro</strong>
+          <strong>Error</strong>
           <span class="muted">${error.message}</span>
         </div>
       `;
     }
   }
 
-  async function generateAudio() {
-    const payload = buildPayload();
-    if (!payload.text) {
-      setResponse("Digite um texto antes de gerar o audio.", "error");
-      return;
-    }
-
-    const info = getRequestInfo();
-    const buttonLabel = elements.generateBtn.textContent;
-    elements.generateBtn.disabled = true;
-    elements.generateBtn.textContent = "Gerando...";
+  async function requestAudio(endpoint, payload, buttonEl, busyLabel, successLabel, mode) {
+    const buttonLabel = buttonEl.textContent;
+    el.generateBtn.disabled = true;
+    el.streamBtn.disabled = true;
+    buttonEl.textContent = busyLabel;
     const startedAt = performance.now();
-    startGenerationTimer(startedAt, info.methodLabel);
+    startTimer(startedAt);
 
     try {
-      const response = await fetch(info.endpoint, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -799,93 +707,72 @@
 
       const blob = await response.blob();
       state.lastDurationMs = performance.now() - startedAt;
-      const filename = `tts_${Date.now()}.${info.format}`;
-      const mime = response.headers.get("content-type") || (info.format === "wav" ? "audio/wav" : "audio/mpeg");
+      const fmt = mode === "stream" ? "mp3" : payload.format;
+      const filename = `tts_${Date.now()}.${fmt}`;
+      const mime = response.headers.get("content-type") || (fmt === "wav" ? "audio/wav" : "audio/mpeg");
       setBlob(blob, filename, mime);
       setResponse(
-        `${info.methodLabel} concluido com sucesso.\n` +
-        `Voz: ${payload.voice || "(padrao)"}\n` +
-        `Emocao: ${payload.emotion || "neutro"}\n` +
+        `${successLabel}\n` +
+        `Voice: ${payload.voice || "(default)"}\n` +
+        `Language: ${payload.language}\n` +
+        `Emotion: ${payload.emotion || "neutral"}\n` +
         `Speed: ${payload.speed}\n` +
-        `Tempo: ${(state.lastDurationMs / 1000).toFixed(2)}s\n` +
-        `Formato: ${info.format.toUpperCase()}`,
+        `Time: ${(state.lastDurationMs / 1000).toFixed(2)}s\n` +
+        `Format: ${fmt.toUpperCase()}`,
         "ok"
       );
-
-      if (state.mode === "download") {
-        downloadLastAudio();
-      }
     } catch (error) {
-      setResponse(`Falha na geracao.\n${error.message}`, "error");
+      setResponse(`${successLabel.replace("completed successfully.", "failed.")}\n${error.message}`, "error");
     } finally {
-      stopGenerationTimer();
-      elements.generateBtn.disabled = false;
-      elements.generateBtn.textContent = buttonLabel;
+      stopTimer();
+      el.generateBtn.disabled = false;
+      el.streamBtn.disabled = false;
+      buttonEl.textContent = buttonLabel;
     }
   }
 
-  function downloadLastAudio() {
-    if (!state.lastBlob) {
+  async function generateAudio() {
+    const payload = buildPayload();
+    if (!payload.text) {
+      setResponse("Enter some text before generating audio.", "error");
       return;
     }
 
+    await requestAudio("/tts", payload, el.generateBtn, "Generating...", "Generation completed successfully.", "standard");
+  }
+
+  async function generateStreamingAudio() {
+    const payload = buildPayload();
+    if (!payload.text) {
+      setResponse("Enter some text before generating streaming audio.", "error");
+      return;
+    }
+
+    payload.format = "mp3";
+    await requestAudio("/tts/stream", payload, el.streamBtn, "Streaming...", "Streaming generation completed successfully.", "stream");
+  }
+
+  function downloadLastAudio() {
+    if (!state.lastBlob) return;
     const url = URL.createObjectURL(state.lastBlob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = state.lastFilename || "tts_output.wav";
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = state.lastFilename || "tts_output.wav";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  async function copyCurl() {
-    const payload = buildPayload();
-    const info = getRequestInfo();
-    const curl = [
-      `curl -X POST http://localhost:8881${info.endpoint} ^`,
-      `  -H "Content-Type: application/json" ^`,
-      `  -d '${JSON.stringify(payload)}' ^`,
-      `  --output saida.${info.format}`,
-    ].join("\n");
-
-    try {
-      await navigator.clipboard.writeText(curl);
-      setResponse(`Comando curl copiado:\n${curl}`, "ok");
-    } catch (error) {
-      setResponse(`Nao foi possivel copiar automaticamente.\n\n${curl}`, "error");
-    }
-  }
-
-  function loadSample() {
-    elements.textInput.value =
-      "Ola. Esta interface permite gerar narracao em portugues do Brasil com voz clonada, emocao configuravel e saida final em WAV para preservar a qualidade.";
-    updateCharCount();
-    setResponse("Texto de exemplo carregado.");
-  }
-
-  function clearForm() {
-    elements.textInput.value = "";
-    elements.speedRange.value = "1";
-    elements.speedValue.textContent = "1.0";
-    elements.emotionSelect.value = "";
-    state.lastDurationMs = 0;
-    setMode("tts");
-    updateCharCount();
-    setResponse("Formulario limpo.");
-  }
-
-  elements.textInput.addEventListener("input", updateCharCount);
-  elements.speedRange.addEventListener("input", () => {
-    elements.speedValue.textContent = Number(elements.speedRange.value).toFixed(2);
+  el.languageSelect.addEventListener("change", filterVoicesByLanguage);
+  el.textInput.addEventListener("input", updateCharCount);
+  el.speedRange.addEventListener("input", () => {
+    el.speedValue.textContent = Number(el.speedRange.value).toFixed(2);
   });
-  elements.modeChips.forEach((chip) => chip.addEventListener("click", () => setMode(chip.dataset.mode)));
-  elements.generateBtn.addEventListener("click", generateAudio);
-  elements.downloadBtn.addEventListener("click", downloadLastAudio);
-  elements.copyCurlBtn.addEventListener("click", copyCurl);
-  elements.loadSampleBtn.addEventListener("click", loadSample);
-  elements.clearBtn.addEventListener("click", clearForm);
-  elements.refreshMetaBtn.addEventListener("click", refreshMeta);
+  el.generateBtn.addEventListener("click", generateAudio);
+  el.streamBtn.addEventListener("click", generateStreamingAudio);
+  el.downloadBtn.addEventListener("click", downloadLastAudio);
+  el.refreshMetaBtn.addEventListener("click", refreshMeta);
 
   updateCharCount();
   refreshMeta();
