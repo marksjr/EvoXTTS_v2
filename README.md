@@ -2,10 +2,6 @@
 
 Local XTTS voice cloning with a browser interface, FastAPI backend, multilingual TTS support, and optional NVIDIA GPU acceleration on Windows.
 
-![Status and dashboard](docs/images/dashboard-status.png)
-
-![Generator and preview](docs/images/dashboard-generator.png)
-
 ![Full interface](docs/images/dashboard-full.png)
 
 ## Overview
