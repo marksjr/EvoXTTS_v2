@@ -9,7 +9,7 @@ Do not rely on the raw source repository as the primary distribution channel.
 
 1. Run `install.bat`.
 2. Run `start.bat` and wait until the model is fully loaded.
-3. Confirm the interface opens and audio generation works.
+3. Confirm the interface opens and audio generation works in WAV and MP3.
 4. Close the application.
 5. Run `system/build-portable.bat`.
 6. Take the folder `dist/Evo-XTTS-V2-Windows-Portable`.
@@ -19,6 +19,7 @@ Do not rely on the raw source repository as the primary distribution channel.
 ## What The Portable Release Should Include
 
 - bundled Python runtime
+- bundled `ffmpeg/` folder for MP3 support
 - application source files
 - web interface
 - local model cache in `.tts`
@@ -28,6 +29,8 @@ Do not rely on the raw source repository as the primary distribution channel.
 ## What Should Not Be Committed To The Repository
 
 - `venv/`
+- `runtime/`
+- `ffmpeg/`
 - `.tts/`
 - `dist/`
 - private voice files in `voices/*.wav`
@@ -42,3 +45,4 @@ Include:
 - short setup and usage steps
 - a note that the first load may take time
 - a note that WAV is the recommended output format
+- a note that MP3 support is already included through the bundled `ffmpeg/` folder

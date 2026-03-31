@@ -29,15 +29,15 @@ Evo XTTS V2 is designed to run locally on Windows with a simple workflow:
 ### Source Usage
 
 - Windows 10 or Windows 11
-- Python 3.11
+- no global Python install required
 - NVIDIA GPU recommended, but not required
 - internet access on first install to download dependencies and the model
 
 ### MP3 Support
 
-`ffmpeg` is optional. Without it, the project still works with `WAV` output.
+`ffmpeg` is installed automatically into the local `ffmpeg/` folder when missing. Without it, the project still works with `WAV` output.
 
-Suggested install:
+If the automatic download fails, you can still install it manually:
 
 ```powershell
 winget install ffmpeg
@@ -52,6 +52,8 @@ winget install ffmpeg
 5. Place at least one `.wav` file inside `voices/`.
 6. Run `start.bat`.
 7. Wait for the interface to open in the browser.
+
+`install.bat` automatically downloads a local portable Python runtime into `runtime/` if the machine does not already have a usable local runtime.
 
 ## Using The Web Interface
 
@@ -422,6 +424,8 @@ file_put_contents(__DIR__ . '/php_en.mp3', $audio);
 - `install.bat`: source setup entry point
 - `start.bat`: source launch entry point
 - `system/setup.bat`: environment setup
+- `system/bootstrap-runtime.ps1`: portable Python bootstrap
+- `system/bootstrap-ffmpeg.ps1`: portable ffmpeg bootstrap
 - `system/run-xtts.bat`: API startup
 - `system/build-portable.bat`: portable package build script
 - `tools/build_portable.py`: portable package builder
@@ -446,6 +450,7 @@ Recommended workflow:
 ## What The Portable Release Already Includes
 
 - bundled Python runtime
+- portable ffmpeg in `ffmpeg/` when available
 - application files
 - web interface
 - local model cache in `.tts`
@@ -471,7 +476,7 @@ Check whether `nvidia-smi` works on Windows. If CUDA is unavailable, the project
 
 ### MP3 Does Not Work
 
-Install `ffmpeg`.
+Run `install.bat` again to restore the local `ffmpeg/` folder, or install ffmpeg manually.
 
 ## Additional Documentation
 

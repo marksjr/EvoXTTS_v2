@@ -1,5 +1,6 @@
 import io
 import struct
+from pathlib import Path
 
 import numpy as np
 from pydub import AudioSegment
@@ -11,6 +12,22 @@ from app.core.config import (
     SAMPLE_RATE,
     SILENCE_BETWEEN_CHUNKS_MS,
 )
+
+
+def _configure_local_ffmpeg() -> None:
+    project_root = Path(__file__).resolve().parents[2]
+    ffmpeg_bin = project_root / "ffmpeg" / "bin"
+    ffmpeg_exe = ffmpeg_bin / "ffmpeg.exe"
+    ffprobe_exe = ffmpeg_bin / "ffprobe.exe"
+
+    if ffmpeg_exe.exists():
+        AudioSegment.converter = str(ffmpeg_exe)
+        AudioSegment.ffmpeg = str(ffmpeg_exe)
+    if ffprobe_exe.exists():
+        AudioSegment.ffprobe = str(ffprobe_exe)
+
+
+_configure_local_ffmpeg()
 
 
 def numpy_to_wav_bytes(audio: np.ndarray) -> bytes:

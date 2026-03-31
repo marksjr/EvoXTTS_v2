@@ -22,6 +22,7 @@ COPY_FILES = [
 COPY_DIRS = [
     "app",
     ".tts",
+    "ffmpeg",
 ]
 
 
@@ -38,9 +39,9 @@ How to use:
 Important:
 
 - this version uses the bundled Python runtime inside `runtime`
+- ffmpeg is bundled inside `ffmpeg`
 - the model cache is already included
 - the `voices` folder is intentionally empty so you can add your own voice files
-- install `ffmpeg` if you want MP3 output
 - WAV is the default and recommended format
 
 To close the app:
@@ -81,11 +82,13 @@ def prepare_voices_dir(dst: Path) -> None:
 
 
 def main() -> None:
-    runtime_dir = ROOT / "venv"
+    runtime_dir = ROOT / "runtime"
+    if not runtime_dir.exists():
+        runtime_dir = ROOT / "venv"
     tts_cache_dir = ROOT / ".tts"
 
     if not runtime_dir.exists():
-        raise SystemExit("The 'venv' folder does not exist. Run system\\setup.bat before building the portable package.")
+        raise SystemExit("Neither 'runtime' nor 'venv' exists. Run system\\setup.bat before building the portable package.")
 
     if not tts_cache_dir.exists():
         raise SystemExit("The '.tts' folder does not exist. Start the application once to download the model before building the portable package.")

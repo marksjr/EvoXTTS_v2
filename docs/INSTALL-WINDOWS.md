@@ -12,10 +12,11 @@ Use the portable GitHub Release if you want the simplest Windows setup.
 
 ## Option 2: Source Setup
 
-1. Install Python 3.11.
-2. Open the project folder.
-3. Run `install.bat`.
-4. When setup finishes, run `start.bat`.
+1. Open the project folder.
+2. Run `install.bat`.
+3. If Python is missing, the installer downloads a local portable runtime into `runtime/`.
+4. If ffmpeg is missing, the installer downloads a local copy into `ffmpeg/` using `curl`.
+5. When setup finishes, run `start.bat`.
 
 ## What To Expect On First Launch
 
@@ -27,10 +28,6 @@ The first launch can take a while because the project may need to:
 
 The browser should only open when the local API is ready.
 
-## Optional MP3 Support
+## MP3 Support
 
-If you want MP3 export, install `ffmpeg`:
-
-```powershell
-winget install ffmpeg
-```
+MP3 export uses the local `ffmpeg/` folder when needed. If that download fails, run `install.bat` again or install ffmpeg manually.

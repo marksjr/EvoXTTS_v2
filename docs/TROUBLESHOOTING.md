@@ -19,11 +19,8 @@ If the GPU is unavailable, the project can fall back to CPU mode.
 
 ## MP3 Does Not Work
 
-Install `ffmpeg`.
-
-```powershell
-winget install ffmpeg
-```
+Run `install.bat` again to restore the local `ffmpeg/` folder.
+If it still fails, install ffmpeg manually and retry.
 
 ## The First Launch Takes Too Long
 

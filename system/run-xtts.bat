@@ -12,7 +12,9 @@ echo The interface will open in the browser automatically.
 echo To stop the API, close this window.
 echo.
 
-if exist "runtime\Scripts\python.exe" (
+if exist "runtime\python.exe" (
+    set "PYTHON_EXE=runtime\python.exe"
+) else if exist "runtime\Scripts\python.exe" (
     set "PYTHON_EXE=runtime\Scripts\python.exe"
 ) else if exist "venv\Scripts\python.exe" (
     set "PYTHON_EXE=venv\Scripts\python.exe"
@@ -20,7 +22,7 @@ if exist "runtime\Scripts\python.exe" (
     set "PYTHON_EXE=python"
 )
 
-%PYTHON_EXE% system\start.py
+"%PYTHON_EXE%" system\start.py
 if errorlevel 1 (
     echo.
     echo Failed to start the application.

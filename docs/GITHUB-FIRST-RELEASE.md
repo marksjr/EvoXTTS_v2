@@ -15,6 +15,7 @@ This package was prepared for end users: extract the folder, place a `.wav` file
 - local web interface
 - FastAPI backend
 - bundled Python runtime
+- bundled local `ffmpeg/` folder for MP3 support
 - local XTTS model cache already included
 - NVIDIA GPU support when available
 - CPU fallback when needed
@@ -30,7 +31,7 @@ This package was prepared for end users: extract the folder, place a `.wav` file
 ## Notes
 
 - WAV is the recommended output format
-- MP3 is optional and may require `ffmpeg`
+- MP3 support is already included through the local `ffmpeg/` folder
 - the first load can still take a while while the model and voice cache initialize
 
 ## Requirements
