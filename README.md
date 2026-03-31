@@ -53,7 +53,7 @@ winget install ffmpeg
 6. Run `start.bat`.
 7. Wait for the interface to open in the browser.
 
-`install.bat` automatically downloads a local portable Python runtime into `runtime/` if the machine does not already have a usable local runtime.
+`install.bat` reuses `runtime/`, `venv/`, or a valid system Python first. It only downloads a local portable Python runtime into `runtime/` when Python is truly missing.
 
 ## Using The Web Interface
 

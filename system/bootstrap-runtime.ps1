@@ -13,6 +13,23 @@ $getPipPath = Join-Path $tempPath "get-pip.py"
 $pythonUrl = "https://www.python.org/ftp/python/$PythonVersion/python-$PythonVersion-embed-amd64.zip"
 $getPipUrl = "https://bootstrap.pypa.io/get-pip.py"
 
+function Download-File {
+    param(
+        [string]$Url,
+        [string]$Destination
+    )
+
+    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+        & curl.exe -L $Url -o $Destination
+        if ($LASTEXITCODE -ne 0) {
+            throw "curl failed while downloading $Url"
+        }
+        return
+    }
+
+    Invoke-WebRequest -Uri $Url -OutFile $Destination
+}
+
 Write-Host "Preparing local Python runtime at $runtimePath"
 
 if (Test-Path (Join-Path $runtimePath "python.exe")) {
@@ -29,7 +46,7 @@ New-Item -ItemType Directory -Path $runtimePath -Force | Out-Null
 
 try {
     Write-Host "Downloading embedded Python $PythonVersion..."
-    Invoke-WebRequest -Uri $pythonUrl -OutFile $embedZipPath
+    Download-File -Url $pythonUrl -Destination $embedZipPath
 
     Write-Host "Extracting runtime..."
     Expand-Archive -LiteralPath $embedZipPath -DestinationPath $runtimePath -Force
@@ -65,7 +82,7 @@ try {
     New-Item -ItemType Directory -Path (Join-Path $runtimePath "Lib\site-packages") -Force | Out-Null
 
     Write-Host "Downloading pip bootstrap..."
-    Invoke-WebRequest -Uri $getPipUrl -OutFile $getPipPath
+    Download-File -Url $getPipUrl -Destination $getPipPath
 
     Write-Host "Installing pip into the local runtime..."
     & (Join-Path $runtimePath "python.exe") $getPipPath --no-warn-script-location

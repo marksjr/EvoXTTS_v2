@@ -10,25 +10,43 @@ echo ============================================
 echo.
 
 set "PYTHON_EXE="
+set "SYSTEM_PYTHON_EXE="
 
 if exist "runtime\python.exe" (
     set "PYTHON_EXE=runtime\python.exe"
+    echo Using existing portable Python runtime.
 ) else if exist "runtime\Scripts\python.exe" (
     set "PYTHON_EXE=runtime\Scripts\python.exe"
+    echo Using existing portable Python runtime.
 ) else if exist "venv\Scripts\python.exe" (
     set "PYTHON_EXE=venv\Scripts\python.exe"
+    echo Using existing virtual environment.
 ) else (
-    echo Portable Python runtime not found.
-    echo Downloading and preparing local runtime...
-    powershell -ExecutionPolicy Bypass -File "system\bootstrap-runtime.ps1"
-    if errorlevel 1 goto :python_error
+    call :detect_system_python
+    if defined SYSTEM_PYTHON_EXE (
+        echo System Python detected: %SYSTEM_PYTHON_EXE%
+        echo Creating local virtual environment...
+        "%SYSTEM_PYTHON_EXE%" -m venv venv
+        if errorlevel 1 goto :python_error
 
-    if exist "runtime\python.exe" (
-        set "PYTHON_EXE=runtime\python.exe"
-    ) else if exist "runtime\Scripts\python.exe" (
-        set "PYTHON_EXE=runtime\Scripts\python.exe"
+        if exist "venv\Scripts\python.exe" (
+            set "PYTHON_EXE=venv\Scripts\python.exe"
+        ) else (
+            goto :python_error
+        )
     ) else (
-        goto :python_error
+        echo System Python not found.
+        echo Downloading and preparing local portable runtime...
+        powershell -ExecutionPolicy Bypass -File "system\bootstrap-runtime.ps1"
+        if errorlevel 1 goto :python_error
+
+        if exist "runtime\python.exe" (
+            set "PYTHON_EXE=runtime\python.exe"
+        ) else if exist "runtime\Scripts\python.exe" (
+            set "PYTHON_EXE=runtime\Scripts\python.exe"
+        ) else (
+            goto :python_error
+        )
     )
 )
 
@@ -94,15 +112,40 @@ echo  1. Place one or more .wav files in the voices folder
 echo  2. Run start.bat
 echo  3. The browser will open automatically at http://localhost:8881
 echo.
-echo  Local runtime ready at runtime\ or venv\ depending on your installation.
+echo  The installer reuses runtime\, venv\, or a valid system Python before downloading anything.
 echo  ffmpeg is available globally or in ffmpeg\bin for MP3 support.
 echo.
 pause
 exit /b 0
 
+:detect_system_python
+set "SYSTEM_PYTHON_EXE="
+call :check_python_candidate py -3.11
+if defined SYSTEM_PYTHON_EXE exit /b 0
+call :check_python_candidate py -3
+if defined SYSTEM_PYTHON_EXE exit /b 0
+call :check_python_candidate python
+if defined SYSTEM_PYTHON_EXE exit /b 0
+call :check_python_candidate python3
+exit /b 0
+
+:check_python_candidate
+set "_PY_CMD=%~1"
+set "_PY_ARG=%~2"
+if "%_PY_CMD%"=="" exit /b 0
+if not "%_PY_ARG%"=="" (
+    %_PY_CMD% %_PY_ARG% -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)" >nul 2>nul
+    if not errorlevel 1 set "SYSTEM_PYTHON_EXE=%_PY_CMD% %_PY_ARG%"
+) else (
+    %_PY_CMD% -c "import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)" >nul 2>nul
+    if not errorlevel 1 set "SYSTEM_PYTHON_EXE=%_PY_CMD%"
+)
+exit /b 0
+
 :python_error
 echo.
-echo Failed to prepare the local Python runtime.
+echo Failed to prepare the Python environment.
+echo The installer tried runtime\, venv\, system Python, and portable bootstrap.
 echo Check your internet connection and try install.bat again.
 pause
 exit /b 1
