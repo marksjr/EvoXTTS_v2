@@ -48,12 +48,12 @@ winget install ffmpeg
 1. Download or clone the project.
 2. Open the project folder.
 3. Run `install.bat`.
-4. Wait for the installer to prepare Python, PyTorch, Coqui TTS, and the model cache.
+4. Wait for the installer to prepare Python, PyTorch, coqui-tts, and the model cache.
 5. Place at least one `.wav` file inside `voices/`.
 6. Run `start.bat`.
 7. Wait for the interface to open in the browser.
 
-`install.bat` reuses `runtime/`, `venv/`, or a valid system Python first. It only downloads a local portable Python runtime into `runtime/` when Python is truly missing.
+`install.bat` reuses `runtime/`, `venv/`, or a valid system Python first. It only downloads a local portable Python runtime into `runtime/` when Python is truly missing, and it installs the newer `coqui-tts` wheel on Windows to avoid fragile source builds.
 
 ## Using The Web Interface
 

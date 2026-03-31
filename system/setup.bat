@@ -67,16 +67,6 @@ if %errorlevel%==0 (
 if errorlevel 1 goto :install_error
 
 echo.
-echo Installing build dependencies for Coqui TTS...
-"%PYTHON_EXE%" -m pip install "numpy<2" "Cython>=0.29.30" setuptools wheel
-if errorlevel 1 goto :install_error
-
-echo.
-echo Installing Coqui TTS...
-"%PYTHON_EXE%" -m pip install --no-build-isolation "TTS>=0.22.0"
-if errorlevel 1 goto :tts_install_error
-
-echo.
 echo Installing project dependencies...
 "%PYTHON_EXE%" -m pip install -r system\requirements.txt
 if errorlevel 1 goto :install_error
@@ -123,6 +113,7 @@ echo  2. Run start.bat
 echo  3. The browser will open automatically at http://localhost:8881
 echo.
 echo  The installer reuses runtime\, venv\, or a valid system Python before downloading anything.
+echo  It installs the modern coqui-tts package to avoid fragile Windows source builds.
 echo  ffmpeg is available globally or in ffmpeg\bin for MP3 support.
 echo.
 pause
@@ -160,16 +151,9 @@ echo Check your internet connection and try install.bat again.
 pause
 exit /b 1
 
-:tts_install_error
-echo.
-echo Failed to install Coqui TTS.
-echo The installer preloaded Cython and disabled build isolation, but the package still failed.
-echo Check the full pip error above for the missing compiler or dependency.
-pause
-exit /b 1
-
 :install_error
 echo.
 echo Failed to install dependencies.
+echo If this happened on Windows, verify the machine can download Python wheels from PyPI.
 pause
 exit /b 1
