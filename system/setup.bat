@@ -51,7 +51,7 @@ if exist "runtime\python.exe" (
 )
 
 echo Upgrading pip...
-"%PYTHON_EXE%" -m pip install --upgrade pip
+"%PYTHON_EXE%" -m pip install --upgrade pip setuptools wheel
 if errorlevel 1 goto :install_error
 
 echo.
@@ -67,6 +67,16 @@ if %errorlevel%==0 (
 if errorlevel 1 goto :install_error
 
 echo.
+echo Installing build dependencies for Coqui TTS...
+"%PYTHON_EXE%" -m pip install "numpy<2" "Cython>=0.29.30" setuptools wheel
+if errorlevel 1 goto :install_error
+
+echo.
+echo Installing Coqui TTS...
+"%PYTHON_EXE%" -m pip install --no-build-isolation "TTS>=0.22.0"
+if errorlevel 1 goto :tts_install_error
+
+echo.
 echo Installing project dependencies...
 "%PYTHON_EXE%" -m pip install -r system\requirements.txt
 if errorlevel 1 goto :install_error
@@ -78,7 +88,7 @@ if not exist "voices" (
 
 echo.
 echo Checking environment...
-"%PYTHON_EXE%" -c "import torch; print('Torch:', torch.__version__); print('Device:', 'cuda' if torch.cuda.is_available() else 'cpu')"
+"%PYTHON_EXE%" -c "import torch, TTS; print('Torch:', torch.__version__); print('Device:', 'cuda' if torch.cuda.is_available() else 'cpu'); print('TTS:', TTS.__version__)"
 if errorlevel 1 goto :install_error
 
 echo.
@@ -147,6 +157,14 @@ echo.
 echo Failed to prepare the Python environment.
 echo The installer tried runtime\, venv\, system Python, and portable bootstrap.
 echo Check your internet connection and try install.bat again.
+pause
+exit /b 1
+
+:tts_install_error
+echo.
+echo Failed to install Coqui TTS.
+echo The installer preloaded Cython and disabled build isolation, but the package still failed.
+echo Check the full pip error above for the missing compiler or dependency.
 pause
 exit /b 1
 

@@ -48,7 +48,7 @@ winget install ffmpeg
 1. Download or clone the project.
 2. Open the project folder.
 3. Run `install.bat`.
-4. Wait for the environment setup and model download to finish.
+4. Wait for the installer to prepare Python, PyTorch, Coqui TTS, and the model cache.
 5. Place at least one `.wav` file inside `voices/`.
 6. Run `start.bat`.
 7. Wait for the interface to open in the browser.
