@@ -1,5 +1,5 @@
 @echo off
-setlocal EnableExtensions
+setlocal EnableExtensions EnableDelayedExpansion
 cd /d "%~dp0"
 cd ..
 title Evo XTTS V2 - Installer
@@ -20,7 +20,11 @@ call :log "Installer log: %CD%\%LOG_FILE%"
 call :log "This installer runs in clear steps so you can see exactly where it fails."
 call :log ""
 
-call :set_step 1 "Prepare Python environment"
+rem ===== STEP 1 =====
+set "CURRENT_STEP=1"
+set "CURRENT_STEP_NAME=Prepare Python environment"
+call :log "PASSO 1/6 - Prepare Python environment"
+
 if exist "runtime\python.exe" (
     set "PYTHON_EXE=runtime\python.exe"
     set "SITE_PACKAGES_DIR=%CD%\runtime\Lib\site-packages"
@@ -37,9 +41,9 @@ if exist "runtime\python.exe" (
     call :log "No local Python found. Looking for a compatible system Python..."
     call :detect_system_python
     if defined SYSTEM_PYTHON_EXE (
-        call :log "System Python detected: %SYSTEM_PYTHON_EXE%"
+        call :log "System Python detected: !SYSTEM_PYTHON_EXE!"
         call :log "Creating local virtual environment in venv\ ..."
-        call %SYSTEM_PYTHON_EXE% -m venv venv >> "%LOG_FILE%" 2>&1
+        call !SYSTEM_PYTHON_EXE! -m venv venv >> "%LOG_FILE%" 2>&1
         if errorlevel 1 goto :python_error
 
         if exist "venv\Scripts\python.exe" (
@@ -70,59 +74,92 @@ if exist "runtime\python.exe" (
 )
 
 if not defined SITE_PACKAGES_DIR goto :python_error
-call :log "Python site-packages: %SITE_PACKAGES_DIR%"
+call :log "Python: !PYTHON_EXE!"
+call :log "Python site-packages: !SITE_PACKAGES_DIR!"
 
-call :set_step 2 "Upgrade pip tools"
+rem ===== STEP 2 =====
+set "CURRENT_STEP=2"
+set "CURRENT_STEP_NAME=Upgrade pip tools"
+call :log "PASSO 2/6 - Upgrade pip tools"
 call :log "Updating pip, setuptools and wheel..."
-"%PYTHON_EXE%" -m pip install --upgrade pip setuptools wheel >> "%LOG_FILE%" 2>&1
+"!PYTHON_EXE!" -m pip install --upgrade pip setuptools wheel >> "%LOG_FILE%" 2>&1
 if errorlevel 1 goto :install_error
 call :log "pip tools updated."
 
-call :set_step 3 "Install PyTorch"
+rem ===== STEP 3 =====
+set "CURRENT_STEP=3"
+set "CURRENT_STEP_NAME=Install PyTorch"
+call :log "PASSO 3/6 - Install PyTorch"
 call :log "Checking hardware to decide between GPU and CPU packages..."
+
+set "TORCH_INDEX=https://download.pytorch.org/whl/cpu"
+set "TORCH_TYPE=CPU"
 where nvidia-smi >nul 2>nul
-if %errorlevel%==0 (
-    call :log "NVIDIA GPU detected. Installing PyTorch with CUDA support..."
-    "%PYTHON_EXE%" -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 >> "%LOG_FILE%" 2>&1
-) else (
-    call :log "No NVIDIA GPU detected. Installing PyTorch for CPU..."
-    "%PYTHON_EXE%" -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu >> "%LOG_FILE%" 2>&1
+if !errorlevel!==0 (
+    set "TORCH_INDEX=https://download.pytorch.org/whl/cu128"
+    set "TORCH_TYPE=CUDA"
 )
-if errorlevel 1 goto :install_error
+call :log "!TORCH_TYPE! detected. Installing PyTorch for !TORCH_TYPE!..."
+
+set "TORCH_OK=0"
+for /L %%A in (1,1,3) do (
+    if !TORCH_OK!==0 (
+        call :log "PyTorch install attempt %%A/3..."
+        "!PYTHON_EXE!" -m pip install torch torchvision torchaudio --index-url !TORCH_INDEX! >> "%LOG_FILE%" 2>&1
+        if !errorlevel!==0 (
+            set "TORCH_OK=1"
+        ) else (
+            if %%A LSS 3 (
+                call :log "Attempt %%A failed. Retrying in 5 seconds..."
+                timeout /t 5 /nobreak >nul
+            )
+        )
+    )
+)
+if !TORCH_OK!==0 goto :install_error
 call :log "PyTorch installed."
 
-call :set_step 4 "Install Evo XTTS dependencies"
+rem ===== STEP 4 =====
+set "CURRENT_STEP=4"
+set "CURRENT_STEP_NAME=Install Evo XTTS dependencies"
+call :log "PASSO 4/6 - Install Evo XTTS dependencies"
 call :log "Removing legacy coqpit package if it exists..."
-"%PYTHON_EXE%" -m pip uninstall -y coqpit >> "%LOG_FILE%" 2>&1
-if exist "%SITE_PACKAGES_DIR%\coqpit" (
+"!PYTHON_EXE!" -m pip uninstall -y coqpit >> "%LOG_FILE%" 2>&1
+if exist "!SITE_PACKAGES_DIR!\coqpit" (
     call :log "Removing leftover coqpit folder from site-packages..."
-    rmdir /s /q "%SITE_PACKAGES_DIR%\coqpit" >> "%LOG_FILE%" 2>&1
+    rmdir /s /q "!SITE_PACKAGES_DIR!\coqpit" >> "%LOG_FILE%" 2>&1
 )
 call :log "Installing project dependencies from system\requirements.txt ..."
-"%PYTHON_EXE%" -m pip install -r system\requirements.txt >> "%LOG_FILE%" 2>&1
+"!PYTHON_EXE!" -m pip install -r system\requirements.txt >> "%LOG_FILE%" 2>&1
 if errorlevel 1 goto :install_error
 call :log "Reinstalling coqpit-config 0.1.2 to restore the coqpit module..."
-"%PYTHON_EXE%" -m pip install --force-reinstall --no-deps coqpit-config==0.1.2 >> "%LOG_FILE%" 2>&1
+"!PYTHON_EXE!" -m pip install --force-reinstall --no-deps coqpit-config==0.1.2 >> "%LOG_FILE%" 2>&1
 if errorlevel 1 goto :install_error
 call :log "Project dependencies installed."
 
-call :set_step 5 "Validate environment"
+rem ===== STEP 5 =====
+set "CURRENT_STEP=5"
+set "CURRENT_STEP_NAME=Validate environment"
+call :log "PASSO 5/6 - Validate environment"
 if not exist "voices" (
     call :log "Creating voices folder..."
     mkdir voices >> "%LOG_FILE%" 2>&1
 )
 call :log "Checking installed versions and runtime health..."
-"%PYTHON_EXE%" -c "import torch, TTS; print('Torch:', torch.__version__); print('Device:', 'cuda' if torch.cuda.is_available() else 'cpu'); print('TTS:', TTS.__version__)" >> "%LOG_FILE%" 2>&1
+"!PYTHON_EXE!" -c "import torch, TTS; print('Torch:', torch.__version__); print('Device:', 'cuda' if torch.cuda.is_available() else 'cpu'); print('TTS:', TTS.__version__)" >> "%LOG_FILE%" 2>&1
 if errorlevel 1 goto :install_error
 call :log "Environment check passed."
 
-call :set_step 6 "Prepare ffmpeg for MP3"
+rem ===== STEP 6 =====
+set "CURRENT_STEP=6"
+set "CURRENT_STEP_NAME=Prepare ffmpeg for MP3"
+call :log "PASSO 6/6 - Prepare ffmpeg for MP3"
 if exist "ffmpeg\bin\ffmpeg.exe" (
     set "PATH=%CD%\ffmpeg\bin;%PATH%"
 )
 
 where ffmpeg >nul 2>nul
-if %errorlevel%==0 (
+if !errorlevel!==0 (
     call :log "ffmpeg detected. MP3 export is available."
 ) else (
     call :log "ffmpeg not found."
@@ -147,12 +184,6 @@ echo ============================================
 echo  Evo XTTS V2 - Windows Installer
 echo ============================================
 echo.
-exit /b 0
-
-:set_step
-set "CURRENT_STEP=%~1"
-set "CURRENT_STEP_NAME=%~2"
-call :log "PASSO %CURRENT_STEP%/6 - %CURRENT_STEP_NAME%"
 exit /b 0
 
 :log
@@ -195,7 +226,7 @@ echo ============================================
 echo  Installation Failed
 echo ============================================
 echo.
-echo Failed during PASSO %CURRENT_STEP%/6 - %CURRENT_STEP_NAME%
+echo Failed during PASSO !CURRENT_STEP!/6 - !CURRENT_STEP_NAME!
 echo.
 echo Reason: the Python environment could not be prepared.
 echo The installer tried runtime\, venv\, system Python, and portable bootstrap.
@@ -204,7 +235,7 @@ echo.
 echo Full log: %CD%\%LOG_FILE%
 echo.
 >> "%LOG_FILE%" echo.
->> "%LOG_FILE%" echo Installation failed during PASSO %CURRENT_STEP%/6 - %CURRENT_STEP_NAME%
+>> "%LOG_FILE%" echo Installation failed during PASSO !CURRENT_STEP!/6 - !CURRENT_STEP_NAME!
 pause
 exit /b 1
 
@@ -214,7 +245,7 @@ echo ============================================
 echo  Installation Failed
 echo ============================================
 echo.
-echo Failed during PASSO %CURRENT_STEP%/6 - %CURRENT_STEP_NAME%
+echo Failed during PASSO !CURRENT_STEP!/6 - !CURRENT_STEP_NAME!
 echo.
 echo Open the log file below to see the exact error details:
 echo %CD%\%LOG_FILE%
@@ -225,7 +256,7 @@ echo - antivirus blocking Python or ffmpeg files
 echo - Python package download temporarily unavailable
 echo.
 >> "%LOG_FILE%" echo.
->> "%LOG_FILE%" echo Installation failed during PASSO %CURRENT_STEP%/6 - %CURRENT_STEP_NAME%
+>> "%LOG_FILE%" echo Installation failed during PASSO !CURRENT_STEP!/6 - !CURRENT_STEP_NAME!
 pause
 exit /b 1
 
