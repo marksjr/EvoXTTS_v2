@@ -9,6 +9,8 @@ __pycache__/
 **/__pycache__/
 *.pyc
 *.pyo
+logs/
+.tmp-metadata/
 logs_test.txt
 server.log
 normal.mp3

@@ -48,12 +48,12 @@ winget install ffmpeg
 1. Download or clone the project.
 2. Open the project folder.
 3. Run `install.bat`.
-4. Wait for the installer to prepare Python, PyTorch, coqui-tts, and the model cache.
+4. Follow the numbered installer steps. If it fails, open `logs/install.log` to see the exact failing step.
 5. Place at least one `.wav` file inside `voices/`.
 6. Run `start.bat`.
 7. Wait for the interface to open in the browser.
 
-`install.bat` reuses `runtime/`, `venv/`, or a valid system Python first. It only downloads a local portable Python runtime into `runtime/` when Python is truly missing, and it installs the newer `coqui-tts` wheel on Windows to avoid fragile source builds.
+`install.bat` now shows 6 explicit setup steps and writes a full log to `logs/install.log`. It reuses `runtime/`, `venv/`, or a valid system Python first. It only downloads a local portable Python runtime into `runtime/` when Python is truly missing, and it installs a pinned `coqui-tts` wheel on Windows so the portable setup stays compatible with the XTTS stack. The XTTS model may still download on the first `start.bat` run.
 
 ## Using The Web Interface
 
@@ -468,7 +468,7 @@ Make sure there is at least one `.wav` file inside `voices/`.
 
 ### The API Does Not Start
 
-Run `install.bat` again and then run `start.bat`.
+Run `install.bat` again, note the failing step number, and then review `logs/install.log` before trying `start.bat` again.
 
 ### The GPU Is Not Recognized
 
@@ -476,7 +476,7 @@ Check whether `nvidia-smi` works on Windows. If CUDA is unavailable, the project
 
 ### MP3 Does Not Work
 
-Run `install.bat` again to restore the local `ffmpeg/` folder, or install ffmpeg manually.
+Run `install.bat` again to restore the local `ffmpeg/` folder and check step 6 in `logs/install.log`, or install ffmpeg manually.
 
 ## Additional Documentation
 
